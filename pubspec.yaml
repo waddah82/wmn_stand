@@ -1,0 +1,46 @@
+name: wmn_standalone
+description: WMN Application Platform - modular local-first foundation for Windows, mobile, web and server applications.
+publish_to: 'none'
+version: 3.25.0+127
+environment:
+  sdk: '>=3.12.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  path_provider: ^2.1.6
+  path: ^1.9.1
+  sqlite3: ^3.5.2
+  decimal: ^3.2.6
+  uuid: ^4.5.1
+  crypto: ^3.0.6
+  http: ^1.5.0
+  csv: ^8.0.0
+  excel: ^4.0.6
+  file_selector: ^1.1.0
+  archive: 3.6.1
+  # Compatibility line: image 4.7+ requires archive 4.x, while this source uses archive 3.6.1.
+  # Keep image below 4.7 so pdf/printing can share the archive 3.x + XML 6 dependency line with excel 4.0.6.
+  image: '>=4.3.0 <4.7.0'
+  pdf: 3.12.0
+  printing: 5.14.3
+  barcode: ^2.2.9
+  # Native adapter packages are isolated behind WMN platform contracts.
+  url_launcher: ^6.3.2
+  share_plus: ^13.3.0
+  connectivity_plus: ^7.3.1
+  device_info_plus: ^13.2.0
+  image_picker: ^1.2.3
+  file_saver: ^0.4.0
+  flutter_barcode_scanner_plus: ^3.0.12
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
