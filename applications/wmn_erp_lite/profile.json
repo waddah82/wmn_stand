@@ -1,0 +1,14 @@
+{
+  "id": "wmn_erp_lite:release",
+  "app_name": "wmn_erp_lite",
+  "name": "Release",
+  "mode": "RELEASE",
+  "targets": [
+    "all"
+  ],
+  "include_assets": true,
+  "strict_validation": true,
+  "metadata": {
+    "generated_from": "applications/wmn_erp_lite"
+  }
+}
