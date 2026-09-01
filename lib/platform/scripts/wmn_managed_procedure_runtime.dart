@@ -151,10 +151,18 @@ class WmnManagedProcedureRuntime {
   Object? _eval(Object? expression, _Scope scope) {
     if (expression == null || expression is num || expression is bool) return expression;
     if (expression is String) return expression;
-    if (expression is List) return expression.map((entry) => _eval(entry, scope)).toList(growable: false);
+    if (expression is List) return expression.map((entry) => _eval(entry, scope)).toList();
     if (expression is! Map) return expression;
 
     final map = Map<String, Object?>.from(expression);
+    // Managed expressions are single-operator maps. Multi-key maps are plain
+    // object literals, even when a field name matches an operator such as
+    // "floor" or "min".
+    if (map.length != 1) {
+      return <String, Object?>{
+        for (final entry in map.entries) entry.key: _eval(entry.value, scope),
+      };
+    }
     if (map.containsKey('get')) return _getPath(scope, '${map['get']}');
     if (map.containsKey('literal')) return map['literal'];
     if (map.containsKey('coalesce')) {

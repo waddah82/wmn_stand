@@ -94,7 +94,7 @@ tool\validate_r3250_windows.bat
 ## Required runtime test
 1. Run WMN R3.25.0.
 2. Import/install ERP Lite 1.3.0 if not already installed.
-3. Import `WMN_POS_Extensions_1.0.0_RUNTIME_INSTALL.zip`.
+3. Import `applications/wmn_pos_extensions/dist/wmn_pos_extensions-1.0.0.zip`.
 4. Open `POS Extensions -> Advanced Point of Sale`.
 5. Create a Barcode Structure with a weighted quantity segment and verify a scan resolves item + quantity + rate.
 6. Create a Coupon/Promotion and verify the cart receives the resolved discount.

@@ -333,7 +333,7 @@
                   "op": "set",
                   "path": "state.rule_name",
                   "value": {
-                    "get": "coupon.coupon_code"
+                    "get": "coupon.coupon_name"
                   }
                 }
               ]

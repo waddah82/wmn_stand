@@ -16,7 +16,7 @@
     "css_text": "",
     "is_default": 0,
     "paper_width_mm": 80,
-    "paper_height_mm": 0,
+  "paper_height_mm": 297,
     "margin_mm": 2,
     "metadata_json": "{\"app_name\": \"wmn_pos_extensions\", \"thermal\": true, \"source_feature\": \"silent_print/printing\"}",
     "letter_head_id": null,

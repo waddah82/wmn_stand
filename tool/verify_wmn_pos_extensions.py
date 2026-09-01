@@ -88,6 +88,49 @@ if len(components['server_scripts']) != 9: fail(f'Expected 9 managed scripts, fo
 if len(components['reports']) != 3: fail(f'Expected 3 reports, found {len(components["reports"])}.')
 if len(components['workspaces']) != 1 or len(components['pages']) != 1: fail('Expected one workspace and one POS page.')
 
+# Reports must use the exact generic tabReport contract. Do not accept legacy
+# aliases here: the installer persists these rows directly into the platform
+# schema, where report_name and ref_doctype are required canonical fields.
+for report in components['reports']:
+    report_id = str(report.get('name') or '').strip()
+    if not report_id:
+        fail(f'Report is missing name: {report}')
+    if not str(report.get('report_name') or '').strip():
+        fail(f'Report {report_id or "<unnamed>"} is missing report_name.')
+    if not str(report.get('ref_doctype') or '').strip():
+        fail(f'Report {report_id or "<unnamed>"} is missing ref_doctype.')
+    if report.get('report_type') != 'Query Report':
+        fail(f'Report {report_id or "<unnamed>"} must use report_type "Query Report".')
+    if report.get('script_source_type') not in {'NATIVE_HANDLER', 'STORAGE_FILE'}:
+        fail(
+            f'Report {report_id or "<unnamed>"} must use a schema-supported '
+            'script_source_type (NATIVE_HANDLER or STORAGE_FILE).'
+        )
+    if 'reference_doctype' in report:
+        fail(f'Report {report_id or "<unnamed>"} uses unsupported reference_doctype alias.')
+
+report_names = {str(report.get('name') or '').strip() for report in components['reports']}
+report_column_schema = {
+    'name', 'parent', 'parentfield', 'parenttype', 'idx', 'fieldname', 'label',
+    'label_ar', 'fieldtype', 'options', 'width', 'precision', 'alignment',
+    'aggregate', 'hidden', 'created_at', 'updated_at',
+}
+for column in components['report_columns']:
+    column_id = str(column.get('name') or '').strip() or '<unnamed>'
+    unknown = sorted(set(column) - report_column_schema)
+    if unknown:
+        fail(f'Report Column {column_id} uses non-schema fields: {", ".join(unknown)}.')
+    for required in {
+        'name', 'parent', 'parentfield', 'parenttype', 'fieldname', 'label',
+        'fieldtype', 'created_at', 'updated_at',
+    }:
+        if not str(column.get(required) or '').strip():
+            fail(f'Report Column {column_id} is missing {required}.')
+    if column.get('parent') not in report_names:
+        fail(f'Report Column {column_id} references an unknown report parent.')
+    if column.get('parentfield') != 'columns' or column.get('parenttype') != 'Report':
+        fail(f'Report Column {column_id} must use Report.columns parent metadata.')
+
 # Metadata field integrity.
 field_keys = set()
 for f in components['doctype_fields']:
@@ -237,6 +280,8 @@ formats=components['print_formats']
 if len(formats)!=1: fail(f'Expected one extension Print Format, found {len(formats)}.')
 elif formats[0].get('renderer_id')!='escpos' or formats[0].get('document_type')!='POS Invoice':
     fail('Extension thermal receipt must target POS Invoice with escpos renderer.')
+elif float(formats[0].get('paper_width_mm') or 0) <= 0 or float(formats[0].get('paper_height_mm') or 0) <= 0:
+    fail('Extension thermal receipt paper dimensions must satisfy the print_formats positive-size constraints.')
 
 # Standard ZIP contract/checksums.
 if not DIST.exists():
@@ -253,6 +298,31 @@ else:
             if envelope.get('platform_version')!='3.25.0+127': fail('ZIP platform_version must be 3.25.0+127.')
             if envelope.get('schema_version')!=36: fail('ZIP schema_version must remain 36.')
             if (envelope.get('manifest') or {}).get('name')!='wmn_pos_extensions': fail('ZIP manifest mismatch.')
+            packaged_columns=json.loads(z.read('metadata/report_columns.json'))
+            if packaged_columns != components['report_columns']:
+                fail('ZIP report_columns metadata is stale relative to the application source.')
+            packaged_formats=json.loads(z.read('metadata/print_formats.json'))
+            if packaged_formats != components['print_formats']:
+                fail('ZIP print_formats metadata is stale relative to the application source.')
+            packaged_sources=json.loads(z.read('metadata/sources.json'))
+            packaged_source_by_key={str(row.get('storage_key') or ''):row for row in packaged_sources}
+            for storage_key, relative_path in source_by_key.items():
+                packaged_source=packaged_source_by_key.get(storage_key, {})
+                source_bytes=(APP/relative_path).read_bytes()
+                archive_path=str(packaged_source.get('archive_path') or '')
+                if packaged_source.get('sha256') != sha256(source_bytes):
+                    fail(f'ZIP managed source hash is stale: {storage_key}')
+                elif packaged_source.get('size') != len(source_bytes):
+                    fail(f'ZIP managed source size is stale: {storage_key}')
+                elif archive_path not in names or z.read(archive_path) != source_bytes:
+                    fail(f'ZIP managed source payload is stale: {storage_key}')
+            packaged_reports=json.loads(z.read('metadata/reports.json'))
+            packaged_report_by_name={str(row.get('name') or ''):row for row in packaged_reports}
+            for source_report in components['reports']:
+                packaged_report=packaged_report_by_name.get(str(source_report.get('name') or ''), {})
+                for field in {'report_name','ref_doctype','report_type','script_source_type'}:
+                    if packaged_report.get(field) != source_report.get(field):
+                        fail(f'ZIP report {source_report.get("name")} has stale {field}.')
             checks=z.read('checksums.sha256').decode('utf-8').splitlines()
             for line in checks:
                 if not line.strip(): continue

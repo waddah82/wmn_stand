@@ -1535,7 +1535,6 @@ void verifyPlatformArchitecture() {
     'application package schema compatibility guard missing',
   );
 
-  final managedProcedureRuntime = readText('lib/platform/scripts/wmn_managed_procedure_runtime.dart');
   final frappeHooks = readText('lib/framework/frappe_compat/frappe_hooks.dart');
   final frappeMethods = readText('lib/framework/frappe_compat/frappe_methods.dart');
   requireCheck(
