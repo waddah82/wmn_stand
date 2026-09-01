@@ -1,0 +1,22 @@
+[
+  {
+    "method_name": "wmn_pos_extensions.resolve_barcode",
+    "handler_kind": "SERVER_SCRIPT",
+    "target": "resolve_barcode",
+    "allow_guest": 0,
+    "enabled": 1,
+    "source_app": "wmn_pos_extensions",
+    "metadata_json": "{\"script_language\": \"wmn-procedure-v1\"}",
+    "updated_at": "2026-09-01T20:30:00.000Z"
+  },
+  {
+    "method_name": "wmn_pos_extensions.resolve_pricing",
+    "handler_kind": "SERVER_SCRIPT",
+    "target": "resolve_pricing",
+    "allow_guest": 0,
+    "enabled": 1,
+    "source_app": "wmn_pos_extensions",
+    "metadata_json": "{\"script_language\": \"wmn-procedure-v1\"}",
+    "updated_at": "2026-09-01T20:30:00.000Z"
+  }
+]

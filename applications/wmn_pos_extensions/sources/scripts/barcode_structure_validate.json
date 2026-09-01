@@ -1,0 +1,140 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "doc.structure_name"
+        }
+      },
+      "message": "Structure Name is required."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "doc.prefix"
+        }
+      },
+      "message": "Prefix is required."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "gt": [
+          {
+            "get": "doc.total_length"
+          },
+          {
+            "len": {
+              "get": "doc.prefix"
+            }
+          }
+        ]
+      },
+      "message": "Total Length must be greater than Prefix length."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "gt": [
+          {
+            "len": {
+              "get": "doc.structure_table"
+            }
+          },
+          0
+        ]
+      },
+      "message": "At least one Barcode Structure row is required."
+    },
+    {
+      "op": "let",
+      "name": "state",
+      "value": {
+        "sum_length": {
+          "len": {
+            "get": "doc.prefix"
+          }
+        }
+      }
+    },
+    {
+      "op": "for_each",
+      "items": {
+        "get": "doc.structure_table"
+      },
+      "as": "row",
+      "steps": [
+        {
+          "op": "assert",
+          "test": {
+            "not_empty": {
+              "get": "row.field_type"
+            }
+          },
+          "message": "Barcode field type is required."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "gt": [
+              {
+                "get": "row.length"
+              },
+              0
+            ]
+          },
+          "message": "Barcode segment length must be greater than zero."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "gt": [
+              {
+                "coalesce": [
+                  {
+                    "get": "row.divisor"
+                  },
+                  1
+                ]
+              },
+              0
+            ]
+          },
+          "message": "Barcode divisor must be greater than zero."
+        },
+        {
+          "op": "set",
+          "path": "state.sum_length",
+          "value": {
+            "add": [
+              {
+                "get": "state.sum_length"
+              },
+              {
+                "get": "row.length"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "op": "assert",
+      "test": {
+        "eq": [
+          {
+            "get": "state.sum_length"
+          },
+          {
+            "get": "doc.total_length"
+          }
+        ]
+      },
+      "message": "Prefix length plus segment lengths must equal Total Length."
+    }
+  ]
+}

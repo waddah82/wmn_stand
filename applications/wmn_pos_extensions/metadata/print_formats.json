@@ -1,0 +1,27 @@
+[
+  {
+    "id": "wmn-pos-ext-thermal-receipt",
+    "code": "WMN-POS-THERMAL",
+    "name": "WMN POS Thermal Receipt",
+    "format_type": "DOCUMENT",
+    "template_json": "{}",
+    "enabled": 1,
+    "created_at": "2026-09-01T20:30:00.000Z",
+    "updated_at": "2026-09-01T20:30:00.000Z",
+    "target_type": "DOCUMENT",
+    "document_type": "POS Invoice",
+    "report_name": null,
+    "renderer_id": "escpos",
+    "template_text": "WMN POS RECEIPT\n{{ document.company }}\nInvoice: {{ document.name }}\nDate: {{ document.posting_date }}\nCustomer: {{ document.customer }}\n--------------------------------\n{{#each document.items}}{{ item_code }}\n{{ qty }} x {{ net_rate }} = {{ amount }}\n{{/each}}--------------------------------\nTotal: {{ document.grand_total }}\nPaid: {{ document.paid_amount }}\nChange: {{ document.change_amount }}\n{{#if document.wmn_pricing_rule}}Offer: {{ document.wmn_pricing_rule }}\n{{/if}}{{ qr document.name }}\nThank you\n",
+    "css_text": "",
+    "is_default": 0,
+    "paper_width_mm": 80,
+    "paper_height_mm": 0,
+    "margin_mm": 2,
+    "metadata_json": "{\"app_name\": \"wmn_pos_extensions\", \"thermal\": true, \"source_feature\": \"silent_print/printing\"}",
+    "letter_head_id": null,
+    "default_print_language": null,
+    "font_family": null,
+    "pdf_generator": "AUTO"
+  }
+]

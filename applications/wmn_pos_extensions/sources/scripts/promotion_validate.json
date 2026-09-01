@@ -1,0 +1,109 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "doc.promotion_name"
+        }
+      },
+      "message": "Promotion Name is required."
+    },
+    {
+      "op": "if",
+      "test": {
+        "eq": [
+          {
+            "get": "doc.promotion_type"
+          },
+          "Percentage Discount"
+        ]
+      },
+      "then": [
+        {
+          "op": "assert",
+          "test": {
+            "and": [
+              {
+                "gte": [
+                  {
+                    "coalesce": [
+                      {
+                        "get": "doc.discount_percentage"
+                      },
+                      0
+                    ]
+                  },
+                  0
+                ]
+              },
+              {
+                "lte": [
+                  {
+                    "coalesce": [
+                      {
+                        "get": "doc.discount_percentage"
+                      },
+                      0
+                    ]
+                  },
+                  100
+                ]
+              }
+            ]
+          },
+          "message": "Discount Percentage must be between 0 and 100."
+        }
+      ]
+    },
+    {
+      "op": "if",
+      "test": {
+        "eq": [
+          {
+            "get": "doc.promotion_type"
+          },
+          "Buy X Get Y"
+        ]
+      },
+      "then": [
+        {
+          "op": "assert",
+          "test": {
+            "gt": [
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.buy_qty"
+                  },
+                  0
+                ]
+              },
+              0
+            ]
+          },
+          "message": "Buy Qty must be greater than zero."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "gt": [
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.free_qty"
+                  },
+                  0
+                ]
+              },
+              0
+            ]
+          },
+          "message": "Free Qty must be greater than zero."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+SELECT name,movement_type,amount,company,pos_profile,pos_opening_entry,mode_of_payment,posting_date,reference_no FROM "tabWMN POS Cash Movement" WHERE docstatus=1 ORDER BY posting_date DESC, name DESC;

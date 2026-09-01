@@ -1,0 +1,115 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "db_list",
+      "doctype": "WMN POS Coupon Redemption",
+      "fields": [
+        "name",
+        "coupon_code"
+      ],
+      "filters": [
+        [
+          "pos_invoice",
+          "=",
+          {
+            "get": "doc.name"
+          }
+        ]
+      ],
+      "limit": 20,
+      "as": "coupon_redemptions"
+    },
+    {
+      "op": "for_each",
+      "items": {
+        "get": "coupon_redemptions"
+      },
+      "as": "redemption",
+      "steps": [
+        {
+          "op": "db_list",
+          "doctype": "WMN POS Coupon",
+          "fields": [
+            "name",
+            "used"
+          ],
+          "filters": [
+            [
+              "coupon_code",
+              "=",
+              {
+                "get": "redemption.coupon_code"
+              }
+            ]
+          ],
+          "limit": 1,
+          "as": "coupons"
+        },
+        {
+          "op": "if",
+          "test": {
+            "gt": [
+              {
+                "len": {
+                  "get": "coupons"
+                }
+              },
+              0
+            ]
+          },
+          "then": [
+            {
+              "op": "db_update",
+              "doctype": "WMN POS Coupon",
+              "name": {
+                "get": "coupons.0.name"
+              },
+              "values": {
+                "used": {
+                  "max": [
+                    0,
+                    {
+                      "sub": [
+                        {
+                          "coalesce": [
+                            {
+                              "get": "coupons.0.used"
+                            },
+                            0
+                          ]
+                        },
+                        1
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "op": "db_delete",
+          "doctype": "WMN POS Coupon Redemption",
+          "name": {
+            "get": "redemption.name"
+          }
+        }
+      ]
+    },
+    {
+      "op": "db_delete",
+      "doctype": "WMN POS Promotion Redemption",
+      "filters": [
+        [
+          "pos_invoice",
+          "=",
+          {
+            "get": "doc.name"
+          }
+        ]
+      ]
+    }
+  ]
+}

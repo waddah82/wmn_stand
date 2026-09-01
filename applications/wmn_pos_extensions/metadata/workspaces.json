@@ -1,0 +1,17 @@
+[
+  {
+    "name": "WMN POS Extensions",
+    "label": "POS Extensions",
+    "module": "WMN POS Extensions",
+    "app_name": "wmn_pos_extensions",
+    "icon": "storefront",
+    "parent_page": null,
+    "sequence_id": 160.0,
+    "is_public": 1,
+    "is_hidden": 0,
+    "content_json": "[]",
+    "metadata_json": "{\"application\": \"WMN POS Extensions\", \"workspace_first\": true}",
+    "created_at": "2026-09-01T20:30:00.000Z",
+    "updated_at": "2026-09-01T20:30:00.000Z"
+  }
+]

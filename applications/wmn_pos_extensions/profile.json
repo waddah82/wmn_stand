@@ -1,0 +1,15 @@
+{
+  "id": "wmn_pos_extensions:release",
+  "app_name": "wmn_pos_extensions",
+  "name": "Release",
+  "mode": "RELEASE",
+  "targets": [
+    "all"
+  ],
+  "include_assets": true,
+  "strict_validation": true,
+  "metadata": {
+    "generated_from": "applications/wmn_pos_extensions",
+    "source": "waddah82/wmn@wmn16"
+  }
+}

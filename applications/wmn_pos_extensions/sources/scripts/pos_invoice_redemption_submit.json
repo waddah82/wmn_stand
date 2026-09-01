@@ -1,0 +1,261 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "if",
+      "test": {
+        "not_empty": {
+          "get": "doc.wmn_pricing_code"
+        }
+      },
+      "then": [
+        {
+          "op": "db_list",
+          "doctype": "WMN POS Coupon",
+          "fields": [
+            "name",
+            "coupon_code",
+            "used",
+            "maximum_use",
+            "one_use_per_customer"
+          ],
+          "filters": [
+            [
+              "coupon_code",
+              "=",
+              {
+                "get": "doc.wmn_pricing_code"
+              }
+            ]
+          ],
+          "limit": 1,
+          "as": "coupons"
+        },
+        {
+          "op": "if",
+          "test": {
+            "gt": [
+              {
+                "len": {
+                  "get": "coupons"
+                }
+              },
+              0
+            ]
+          },
+          "then": [
+            {
+              "op": "let",
+              "name": "coupon",
+              "value": {
+                "get": "coupons.0"
+              }
+            },
+            {
+              "op": "assert",
+              "test": {
+                "or": [
+                  {
+                    "lte": [
+                      {
+                        "coalesce": [
+                          {
+                            "get": "coupon.maximum_use"
+                          },
+                          0
+                        ]
+                      },
+                      0
+                    ]
+                  },
+                  {
+                    "lt": [
+                      {
+                        "coalesce": [
+                          {
+                            "get": "coupon.used"
+                          },
+                          0
+                        ]
+                      },
+                      {
+                        "get": "coupon.maximum_use"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "message": "Coupon usage limit has been reached."
+            },
+            {
+              "op": "if",
+              "test": {
+                "get": "coupon.one_use_per_customer"
+              },
+              "then": [
+                {
+                  "op": "db_list",
+                  "doctype": "WMN POS Coupon Redemption",
+                  "fields": [
+                    "name"
+                  ],
+                  "filters": [
+                    [
+                      "coupon_code",
+                      "=",
+                      {
+                        "get": "doc.wmn_pricing_code"
+                      }
+                    ],
+                    [
+                      "customer",
+                      "=",
+                      {
+                        "get": "doc.customer"
+                      }
+                    ]
+                  ],
+                  "limit": 1,
+                  "as": "prior_coupon_use"
+                },
+                {
+                  "op": "assert",
+                  "test": {
+                    "eq": [
+                      {
+                        "len": {
+                          "get": "prior_coupon_use"
+                        }
+                      },
+                      0
+                    ]
+                  },
+                  "message": "Coupon can only be used once per customer."
+                }
+              ]
+            },
+            {
+              "op": "db_insert",
+              "doctype": "WMN POS Coupon Redemption",
+              "values": {
+                "coupon_code": {
+                  "get": "doc.wmn_pricing_code"
+                },
+                "pos_invoice": {
+                  "get": "doc.name"
+                },
+                "customer": {
+                  "get": "doc.customer"
+                },
+                "discount_amount": {
+                  "coalesce": [
+                    {
+                      "get": "doc.wmn_pricing_discount"
+                    },
+                    0
+                  ]
+                },
+                "posting_date": {
+                  "get": "doc.posting_date"
+                }
+              }
+            },
+            {
+              "op": "db_update",
+              "doctype": "WMN POS Coupon",
+              "name": {
+                "get": "coupon.name"
+              },
+              "values": {
+                "used": {
+                  "add": [
+                    {
+                      "coalesce": [
+                        {
+                          "get": "coupon.used"
+                        },
+                        0
+                      ]
+                    },
+                    1
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "op": "if",
+      "test": {
+        "not_empty": {
+          "get": "doc.wmn_pricing_rule"
+        }
+      },
+      "then": [
+        {
+          "op": "db_list",
+          "doctype": "WMN POS Promotion",
+          "fields": [
+            "name",
+            "promotion_name"
+          ],
+          "filters": [
+            [
+              "promotion_name",
+              "=",
+              {
+                "get": "doc.wmn_pricing_rule"
+              }
+            ]
+          ],
+          "limit": 1,
+          "as": "promos"
+        },
+        {
+          "op": "if",
+          "test": {
+            "gt": [
+              {
+                "len": {
+                  "get": "promos"
+                }
+              },
+              0
+            ]
+          },
+          "then": [
+            {
+              "op": "db_insert",
+              "doctype": "WMN POS Promotion Redemption",
+              "values": {
+                "promotion": {
+                  "get": "promos.0.name"
+                },
+                "pos_invoice": {
+                  "get": "doc.name"
+                },
+                "customer": {
+                  "get": "doc.customer"
+                },
+                "discount_amount": {
+                  "coalesce": [
+                    {
+                      "get": "doc.wmn_pricing_discount"
+                    },
+                    0
+                  ]
+                },
+                "posting_date": {
+                  "get": "doc.posting_date"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

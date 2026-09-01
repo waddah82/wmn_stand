@@ -1,0 +1,208 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "db_list",
+      "doctype": "WMN POS Cash Movement",
+      "fields": [
+        "name",
+        "movement_type",
+        "amount",
+        "mode_of_payment"
+      ],
+      "filters": [
+        [
+          "pos_opening_entry",
+          "=",
+          {
+            "get": "doc.pos_opening_entry"
+          }
+        ],
+        [
+          "docstatus",
+          "=",
+          1
+        ]
+      ],
+      "limit": 500,
+      "as": "movements"
+    },
+    {
+      "op": "for_each",
+      "items": {
+        "get": "doc.details"
+      },
+      "as": "detail",
+      "steps": [
+        {
+          "op": "let",
+          "name": "adjust",
+          "value": {
+            "total": 0
+          }
+        },
+        {
+          "op": "for_each",
+          "items": {
+            "get": "movements"
+          },
+          "as": "move",
+          "steps": [
+            {
+              "op": "if",
+              "test": {
+                "eq": [
+                  {
+                    "get": "move.mode_of_payment"
+                  },
+                  {
+                    "get": "detail.mode_of_payment"
+                  }
+                ]
+              },
+              "then": [
+                {
+                  "op": "set",
+                  "path": "adjust.total",
+                  "value": {
+                    "add": [
+                      {
+                        "get": "adjust.total"
+                      },
+                      {
+                        "if": {
+                          "test": {
+                            "eq": [
+                              {
+                                "get": "move.movement_type"
+                              },
+                              "Cash In"
+                            ]
+                          },
+                          "then": {
+                            "get": "move.amount"
+                          },
+                          "else": {
+                            "mul": [
+                              -1,
+                              {
+                                "get": "move.amount"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "set",
+          "path": "detail.expected_amount",
+          "value": {
+            "round": {
+              "value": {
+                "add": [
+                  {
+                    "coalesce": [
+                      {
+                        "get": "detail.expected_amount"
+                      },
+                      0
+                    ]
+                  },
+                  {
+                    "get": "adjust.total"
+                  }
+                ]
+              },
+              "precision": 2
+            }
+          }
+        },
+        {
+          "op": "set",
+          "path": "detail.difference_amount",
+          "value": {
+            "round": {
+              "value": {
+                "sub": [
+                  {
+                    "coalesce": [
+                      {
+                        "get": "detail.closing_amount"
+                      },
+                      0
+                    ]
+                  },
+                  {
+                    "coalesce": [
+                      {
+                        "get": "detail.expected_amount"
+                      },
+                      0
+                    ]
+                  }
+                ]
+              },
+              "precision": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "op": "set",
+      "path": "doc.total_expected",
+      "value": {
+        "round": {
+          "value": {
+            "sum": {
+              "items": {
+                "get": "doc.details"
+              },
+              "as": "r",
+              "value": {
+                "coalesce": [
+                  {
+                    "get": "r.expected_amount"
+                  },
+                  0
+                ]
+              }
+            }
+          },
+          "precision": 2
+        }
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.total_difference",
+      "value": {
+        "round": {
+          "value": {
+            "sub": [
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.total_closing"
+                  },
+                  0
+                ]
+              },
+              {
+                "get": "doc.total_expected"
+              }
+            ]
+          },
+          "precision": 2
+        }
+      }
+    }
+  ]
+}

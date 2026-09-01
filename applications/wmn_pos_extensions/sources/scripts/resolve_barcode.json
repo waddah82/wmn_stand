@@ -1,0 +1,507 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "let",
+      "name": "state",
+      "value": {
+        "resolved": {},
+        "matched": false
+      }
+    },
+    {
+      "op": "db_list",
+      "doctype": "Barcode Structure",
+      "fields": [
+        "name",
+        "prefix",
+        "total_length",
+        "enabled"
+      ],
+      "filters": [
+        [
+          "enabled",
+          "=",
+          1
+        ]
+      ],
+      "order_by": "name asc",
+      "limit": 500,
+      "as": "structures"
+    },
+    {
+      "op": "for_each",
+      "items": {
+        "get": "structures"
+      },
+      "as": "structure",
+      "steps": [
+        {
+          "op": "if",
+          "test": {
+            "and": [
+              {
+                "not": {
+                  "get": "state.matched"
+                }
+              },
+              {
+                "starts_with": [
+                  {
+                    "get": "barcode"
+                  },
+                  {
+                    "get": "structure.prefix"
+                  }
+                ]
+              },
+              {
+                "eq": [
+                  {
+                    "len": {
+                      "get": "barcode"
+                    }
+                  },
+                  {
+                    "get": "structure.total_length"
+                  }
+                ]
+              }
+            ]
+          },
+          "then": [
+            {
+              "op": "db_get",
+              "doctype": "Barcode Structure",
+              "name": {
+                "get": "structure.name"
+              },
+              "as": "definition"
+            },
+            {
+              "op": "let",
+              "name": "parse",
+              "value": {
+                "offset": {
+                  "len": {
+                    "get": "structure.prefix"
+                  }
+                },
+                "result": {
+                  "barcode": {
+                    "get": "barcode"
+                  }
+                }
+              }
+            },
+            {
+              "op": "for_each",
+              "items": {
+                "get": "definition.structure_table"
+              },
+              "as": "segment",
+              "steps": [
+                {
+                  "op": "let",
+                  "name": "raw",
+                  "value": {
+                    "slice": {
+                      "value": {
+                        "get": "barcode"
+                      },
+                      "start": {
+                        "get": "parse.offset"
+                      },
+                      "length": {
+                        "get": "segment.length"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "let",
+                  "name": "parsed",
+                  "value": {
+                    "if": {
+                      "test": {
+                        "eq": [
+                          {
+                            "get": "segment.field_data_type"
+                          },
+                          "Float"
+                        ]
+                      },
+                      "then": {
+                        "div": [
+                          {
+                            "to_number": {
+                              "get": "raw"
+                            }
+                          },
+                          {
+                            "coalesce": [
+                              {
+                                "get": "segment.divisor"
+                              },
+                              1
+                            ]
+                          }
+                        ]
+                      },
+                      "else": {
+                        "if": {
+                          "test": {
+                            "eq": [
+                              {
+                                "get": "segment.field_data_type"
+                              },
+                              "Date"
+                            ]
+                          },
+                          "then": {
+                            "concat": [
+                              "20",
+                              {
+                                "slice": {
+                                  "value": {
+                                    "get": "raw"
+                                  },
+                                  "start": 0,
+                                  "length": 2
+                                }
+                              },
+                              "-",
+                              {
+                                "slice": {
+                                  "value": {
+                                    "get": "raw"
+                                  },
+                                  "start": 2,
+                                  "length": 2
+                                }
+                              },
+                              "-",
+                              {
+                                "slice": {
+                                  "value": {
+                                    "get": "raw"
+                                  },
+                                  "start": 4,
+                                  "length": 2
+                                }
+                              }
+                            ]
+                          },
+                          "else": {
+                            "get": "raw"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "map_put",
+                  "path": "parse.result",
+                  "key": {
+                    "get": "segment.field_type"
+                  },
+                  "value": {
+                    "get": "parsed"
+                  }
+                },
+                {
+                  "op": "set",
+                  "path": "parse.offset",
+                  "value": {
+                    "add": [
+                      {
+                        "get": "parse.offset"
+                      },
+                      {
+                        "get": "segment.length"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "op": "if",
+              "test": {
+                "not_empty": {
+                  "get": "parse.result.item_code"
+                }
+              },
+              "then": [
+                {
+                  "op": "db_get",
+                  "doctype": "Item",
+                  "name": {
+                    "get": "parse.result.item_code"
+                  },
+                  "as": "item"
+                },
+                {
+                  "op": "if",
+                  "test": {
+                    "empty": {
+                      "get": "item"
+                    }
+                  },
+                  "then": [
+                    {
+                      "op": "db_list",
+                      "doctype": "Item",
+                      "fields": [
+                        "name",
+                        "item_code",
+                        "stock_uom",
+                        "standard_rate",
+                        "barcode"
+                      ],
+                      "filters": [
+                        [
+                          "barcode",
+                          "=",
+                          {
+                            "get": "parse.result.item_code"
+                          }
+                        ]
+                      ],
+                      "limit": 1,
+                      "as": "barcode_items"
+                    },
+                    {
+                      "op": "if",
+                      "test": {
+                        "gt": [
+                          {
+                            "len": {
+                              "get": "barcode_items"
+                            }
+                          },
+                          0
+                        ]
+                      },
+                      "then": [
+                        {
+                          "op": "set",
+                          "path": "parse.result.item_code",
+                          "value": {
+                            "get": "barcode_items.0.item_code"
+                          }
+                        },
+                        {
+                          "op": "db_get",
+                          "doctype": "Item",
+                          "name": {
+                            "get": "barcode_items.0.name"
+                          },
+                          "as": "item"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "if",
+                  "test": {
+                    "not_empty": {
+                      "get": "item"
+                    }
+                  },
+                  "then": [
+                    {
+                      "op": "db_get",
+                      "doctype": "POS Profile",
+                      "name": {
+                        "get": "profile"
+                      },
+                      "as": "profile_doc"
+                    },
+                    {
+                      "op": "let",
+                      "name": "resolved_uom",
+                      "value": {
+                        "coalesce": [
+                          {
+                            "get": "parse.result.uom"
+                          },
+                          {
+                            "field": {
+                              "from": {
+                                "get": "item"
+                              },
+                              "name": "stock_uom"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "op": "db_list",
+                      "doctype": "Item Price",
+                      "fields": [
+                        "name",
+                        "uom",
+                        "price_list_rate",
+                        "price_list"
+                      ],
+                      "filters": [
+                        [
+                          "item_code",
+                          "=",
+                          {
+                            "get": "parse.result.item_code"
+                          }
+                        ],
+                        [
+                          "price_list",
+                          "=",
+                          {
+                            "coalesce": [
+                              {
+                                "get": "price_list"
+                              },
+                              {
+                                "field": {
+                                  "from": {
+                                    "get": "profile_doc"
+                                  },
+                                  "name": "selling_price_list"
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      ],
+                      "limit": 50,
+                      "as": "prices"
+                    },
+                    {
+                      "op": "let",
+                      "name": "price_state",
+                      "value": {
+                        "rate": {
+                          "coalesce": [
+                            {
+                              "field": {
+                                "from": {
+                                  "get": "item"
+                                },
+                                "name": "standard_rate"
+                              }
+                            },
+                            0
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "op": "for_each",
+                      "items": {
+                        "get": "prices"
+                      },
+                      "as": "price",
+                      "steps": [
+                        {
+                          "op": "if",
+                          "test": {
+                            "or": [
+                              {
+                                "empty": {
+                                  "get": "price.uom"
+                                }
+                              },
+                              {
+                                "eq": [
+                                  {
+                                    "get": "price.uom"
+                                  },
+                                  {
+                                    "get": "resolved_uom"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          "then": [
+                            {
+                              "op": "set",
+                              "path": "price_state.rate",
+                              "value": {
+                                "get": "price.price_list_rate"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "op": "set",
+                      "path": "state.resolved",
+                      "value": {
+                        "product_code": {
+                          "get": "parse.result.item_code"
+                        },
+                        "quantity": {
+                          "coalesce": [
+                            {
+                              "get": "parse.result.qty"
+                            },
+                            1
+                          ]
+                        },
+                        "rate": {
+                          "get": "price_state.rate"
+                        },
+                        "unit": {
+                          "get": "resolved_uom"
+                        },
+                        "barcode_type": {
+                          "if": {
+                            "test": {
+                              "gt": [
+                                {
+                                  "coalesce": [
+                                    {
+                                      "get": "parse.result.qty"
+                                    },
+                                    0
+                                  ]
+                                },
+                                0
+                              ]
+                            },
+                            "then": "Weighted",
+                            "else": "Priced"
+                          }
+                        },
+                        "data": {
+                          "get": "parse.result"
+                        }
+                      }
+                    },
+                    {
+                      "op": "set",
+                      "path": "state.matched",
+                      "value": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "op": "return",
+      "value": {
+        "get": "state.resolved"
+      }
+    }
+  ]
+}

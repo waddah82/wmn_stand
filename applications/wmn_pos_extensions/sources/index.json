@@ -1,0 +1,50 @@
+[
+  {
+    "storage_key": "apps/wmn_pos_extensions/scripts/barcode_structure_validate.json",
+    "file": "sources/scripts/barcode_structure_validate.json"
+  },
+  {
+    "storage_key": "apps/wmn_pos_extensions/scripts/resolve_barcode.json",
+    "file": "sources/scripts/resolve_barcode.json"
+  },
+  {
+    "storage_key": "apps/wmn_pos_extensions/scripts/resolve_pricing.json",
+    "file": "sources/scripts/resolve_pricing.json"
+  },
+  {
+    "storage_key": "apps/wmn_pos_extensions/scripts/coupon_validate.json",
+    "file": "sources/scripts/coupon_validate.json"
+  },
+  {
+    "storage_key": "apps/wmn_pos_extensions/scripts/promotion_validate.json",
+    "file": "sources/scripts/promotion_validate.json"
+  },
+  {
+    "storage_key": "apps/wmn_pos_extensions/scripts/cash_movement_validate.json",
+    "file": "sources/scripts/cash_movement_validate.json"
+  },
+  {
+    "storage_key": "apps/wmn_pos_extensions/scripts/closing_cash_movement_adjust.json",
+    "file": "sources/scripts/closing_cash_movement_adjust.json"
+  },
+  {
+    "storage_key": "apps/wmn_pos_extensions/scripts/pos_invoice_redemption_submit.json",
+    "file": "sources/scripts/pos_invoice_redemption_submit.json"
+  },
+  {
+    "storage_key": "apps/wmn_pos_extensions/scripts/pos_invoice_redemption_cancel.json",
+    "file": "sources/scripts/pos_invoice_redemption_cancel.json"
+  },
+  {
+    "storage_key": "apps/wmn_pos_extensions/reports/wmn-pos-cash-movement-register.sql",
+    "file": "sources/reports/wmn-pos-cash-movement-register.sql"
+  },
+  {
+    "storage_key": "apps/wmn_pos_extensions/reports/wmn-pos-coupon-redemption-register.sql",
+    "file": "sources/reports/wmn-pos-coupon-redemption-register.sql"
+  },
+  {
+    "storage_key": "apps/wmn_pos_extensions/reports/wmn-pos-promotion-redemption-register.sql",
+    "file": "sources/reports/wmn-pos-promotion-redemption-register.sql"
+  }
+]

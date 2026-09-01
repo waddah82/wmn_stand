@@ -1,0 +1,123 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "assert",
+      "test": {
+        "gt": [
+          {
+            "coalesce": [
+              {
+                "get": "doc.amount"
+              },
+              0
+            ]
+          },
+          0
+        ]
+      },
+      "message": "Cash Movement Amount must be greater than zero."
+    },
+    {
+      "op": "db_get",
+      "doctype": "POS Opening Entry",
+      "name": {
+        "get": "doc.pos_opening_entry"
+      },
+      "as": "opening"
+    },
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "opening"
+        }
+      },
+      "message": "POS Opening Entry is required."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "eq": [
+          {
+            "field": {
+              "from": {
+                "get": "opening"
+              },
+              "name": "status"
+            }
+          },
+          "Open"
+        ]
+      },
+      "message": "Cash movements require an open POS shift."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "eq": [
+          {
+            "field": {
+              "from": {
+                "get": "opening"
+              },
+              "name": "pos_profile"
+            }
+          },
+          {
+            "get": "doc.pos_profile"
+          }
+        ]
+      },
+      "message": "Cash Movement POS Profile must match the POS Opening Entry."
+    },
+    {
+      "op": "set",
+      "path": "doc.company",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.company"
+          },
+          {
+            "field": {
+              "from": {
+                "get": "opening"
+              },
+              "name": "company"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.posting_date",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.posting_date"
+          },
+          {
+            "today": true
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.posting_time",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.posting_time"
+          },
+          {
+            "now": true
+          }
+        ]
+      }
+    }
+  ]
+}

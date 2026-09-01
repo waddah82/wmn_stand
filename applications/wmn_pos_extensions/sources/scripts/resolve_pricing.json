@@ -1,0 +1,889 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "db_get",
+      "doctype": "POS Profile",
+      "name": {
+        "get": "profile"
+      },
+      "as": "profile_doc"
+    },
+    {
+      "op": "let",
+      "name": "state",
+      "value": {
+        "discount": 0,
+        "message": "",
+        "rule_name": "",
+        "stop": false
+      }
+    },
+    {
+      "op": "let",
+      "name": "today_value",
+      "value": {
+        "today": true
+      }
+    },
+    {
+      "op": "if",
+      "test": {
+        "not_empty": {
+          "get": "pricing_code"
+        }
+      },
+      "then": [
+        {
+          "op": "db_list",
+          "doctype": "WMN POS Coupon",
+          "fields": [
+            "name",
+            "coupon_code",
+            "disabled",
+            "company",
+            "customer",
+            "discount_type",
+            "discount_percentage",
+            "discount_amount",
+            "minimum_cart_amount",
+            "maximum_discount_amount",
+            "valid_from",
+            "valid_upto",
+            "maximum_use",
+            "used"
+          ],
+          "filters": [
+            [
+              "coupon_code",
+              "=",
+              {
+                "get": "pricing_code"
+              }
+            ],
+            [
+              "disabled",
+              "=",
+              0
+            ]
+          ],
+          "limit": 1,
+          "as": "coupons"
+        },
+        {
+          "op": "if",
+          "test": {
+            "gt": [
+              {
+                "len": {
+                  "get": "coupons"
+                }
+              },
+              0
+            ]
+          },
+          "then": [
+            {
+              "op": "let",
+              "name": "coupon",
+              "value": {
+                "get": "coupons.0"
+              }
+            },
+            {
+              "op": "if",
+              "test": {
+                "and": [
+                  {
+                    "or": [
+                      {
+                        "empty": {
+                          "get": "coupon.company"
+                        }
+                      },
+                      {
+                        "eq": [
+                          {
+                            "get": "coupon.company"
+                          },
+                          {
+                            "field": {
+                              "from": {
+                                "get": "profile_doc"
+                              },
+                              "name": "company"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "or": [
+                      {
+                        "empty": {
+                          "get": "coupon.customer"
+                        }
+                      },
+                      {
+                        "eq": [
+                          {
+                            "get": "coupon.customer"
+                          },
+                          {
+                            "get": "party"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "or": [
+                      {
+                        "empty": {
+                          "get": "coupon.valid_from"
+                        }
+                      },
+                      {
+                        "lte": [
+                          {
+                            "get": "coupon.valid_from"
+                          },
+                          {
+                            "get": "today_value"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "or": [
+                      {
+                        "empty": {
+                          "get": "coupon.valid_upto"
+                        }
+                      },
+                      {
+                        "gte": [
+                          {
+                            "get": "coupon.valid_upto"
+                          },
+                          {
+                            "get": "today_value"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "gte": [
+                      {
+                        "get": "transaction_total"
+                      },
+                      {
+                        "coalesce": [
+                          {
+                            "get": "coupon.minimum_cart_amount"
+                          },
+                          0
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "or": [
+                      {
+                        "lte": [
+                          {
+                            "coalesce": [
+                              {
+                                "get": "coupon.maximum_use"
+                              },
+                              0
+                            ]
+                          },
+                          0
+                        ]
+                      },
+                      {
+                        "lt": [
+                          {
+                            "coalesce": [
+                              {
+                                "get": "coupon.used"
+                              },
+                              0
+                            ]
+                          },
+                          {
+                            "get": "coupon.maximum_use"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "then": [
+                {
+                  "op": "let",
+                  "name": "coupon_discount",
+                  "value": {
+                    "if": {
+                      "test": {
+                        "eq": [
+                          {
+                            "get": "coupon.discount_type"
+                          },
+                          "Percentage"
+                        ]
+                      },
+                      "then": {
+                        "div": [
+                          {
+                            "mul": [
+                              {
+                                "get": "transaction_total"
+                              },
+                              {
+                                "coalesce": [
+                                  {
+                                    "get": "coupon.discount_percentage"
+                                  },
+                                  0
+                                ]
+                              }
+                            ]
+                          },
+                          100
+                        ]
+                      },
+                      "else": {
+                        "coalesce": [
+                          {
+                            "get": "coupon.discount_amount"
+                          },
+                          0
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "if",
+                  "test": {
+                    "gt": [
+                      {
+                        "coalesce": [
+                          {
+                            "get": "coupon.maximum_discount_amount"
+                          },
+                          0
+                        ]
+                      },
+                      0
+                    ]
+                  },
+                  "then": [
+                    {
+                      "op": "set",
+                      "path": "coupon_discount",
+                      "value": {
+                        "min": [
+                          {
+                            "get": "coupon_discount"
+                          },
+                          {
+                            "get": "coupon.maximum_discount_amount"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "op": "set",
+                  "path": "state.discount",
+                  "value": {
+                    "add": [
+                      {
+                        "get": "state.discount"
+                      },
+                      {
+                        "get": "coupon_discount"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "op": "set",
+                  "path": "state.message",
+                  "value": {
+                    "concat": [
+                      "Coupon ",
+                      {
+                        "get": "coupon.coupon_code"
+                      },
+                      " applied"
+                    ]
+                  }
+                },
+                {
+                  "op": "set",
+                  "path": "state.rule_name",
+                  "value": {
+                    "get": "coupon.coupon_code"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "op": "db_list",
+      "doctype": "WMN POS Promotion",
+      "fields": [
+        "name",
+        "promotion_name",
+        "promotion_code",
+        "disabled",
+        "auto_apply",
+        "priority",
+        "stackable",
+        "company",
+        "pos_profile",
+        "required_coupon",
+        "apply_scope",
+        "item_code",
+        "item_group",
+        "minimum_cart_amount",
+        "minimum_qty",
+        "promotion_type",
+        "discount_percentage",
+        "discount_amount",
+        "maximum_discount_amount",
+        "buy_qty",
+        "free_qty",
+        "free_item",
+        "valid_from",
+        "valid_upto"
+      ],
+      "filters": [
+        [
+          "disabled",
+          "=",
+          0
+        ]
+      ],
+      "order_by": "priority desc",
+      "limit": 500,
+      "as": "promotions"
+    },
+    {
+      "op": "for_each",
+      "items": {
+        "get": "promotions"
+      },
+      "as": "promo",
+      "steps": [
+        {
+          "op": "if",
+          "test": {
+            "and": [
+              {
+                "not": {
+                  "get": "state.stop"
+                }
+              },
+              {
+                "or": [
+                  {
+                    "eq": [
+                      {
+                        "get": "promo.auto_apply"
+                      },
+                      1
+                    ]
+                  },
+                  {
+                    "and": [
+                      {
+                        "not_empty": {
+                          "get": "promo.required_coupon"
+                        }
+                      },
+                      {
+                        "eq": [
+                          {
+                            "get": "promo.required_coupon"
+                          },
+                          {
+                            "get": "pricing_code"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "or": [
+                  {
+                    "empty": {
+                      "get": "promo.company"
+                    }
+                  },
+                  {
+                    "eq": [
+                      {
+                        "get": "promo.company"
+                      },
+                      {
+                        "field": {
+                          "from": {
+                            "get": "profile_doc"
+                          },
+                          "name": "company"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "or": [
+                  {
+                    "empty": {
+                      "get": "promo.pos_profile"
+                    }
+                  },
+                  {
+                    "eq": [
+                      {
+                        "get": "promo.pos_profile"
+                      },
+                      {
+                        "get": "profile"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "or": [
+                  {
+                    "empty": {
+                      "get": "promo.valid_from"
+                    }
+                  },
+                  {
+                    "lte": [
+                      {
+                        "get": "promo.valid_from"
+                      },
+                      {
+                        "get": "today_value"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "or": [
+                  {
+                    "empty": {
+                      "get": "promo.valid_upto"
+                    }
+                  },
+                  {
+                    "gte": [
+                      {
+                        "get": "promo.valid_upto"
+                      },
+                      {
+                        "get": "today_value"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "gte": [
+                  {
+                    "get": "transaction_total"
+                  },
+                  {
+                    "coalesce": [
+                      {
+                        "get": "promo.minimum_cart_amount"
+                      },
+                      0
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "then": [
+            {
+              "op": "let",
+              "name": "scope",
+              "value": {
+                "base": 0,
+                "qty": 0
+              }
+            },
+            {
+              "op": "for_each",
+              "items": {
+                "get": "cart"
+              },
+              "as": "line",
+              "steps": [
+                {
+                  "op": "if",
+                  "test": {
+                    "or": [
+                      {
+                        "eq": [
+                          {
+                            "get": "promo.apply_scope"
+                          },
+                          "Transaction"
+                        ]
+                      },
+                      {
+                        "and": [
+                          {
+                            "eq": [
+                              {
+                                "get": "promo.apply_scope"
+                              },
+                              "Item"
+                            ]
+                          },
+                          {
+                            "eq": [
+                              {
+                                "get": "line.product_code"
+                              },
+                              {
+                                "get": "promo.item_code"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "and": [
+                          {
+                            "eq": [
+                              {
+                                "get": "promo.apply_scope"
+                              },
+                              "Item Group"
+                            ]
+                          },
+                          {
+                            "eq": [
+                              {
+                                "get": "line.group"
+                              },
+                              {
+                                "get": "promo.item_group"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "then": [
+                    {
+                      "op": "set",
+                      "path": "scope.base",
+                      "value": {
+                        "add": [
+                          {
+                            "get": "scope.base"
+                          },
+                          {
+                            "get": "line.amount"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "op": "set",
+                      "path": "scope.qty",
+                      "value": {
+                        "add": [
+                          {
+                            "get": "scope.qty"
+                          },
+                          {
+                            "get": "line.quantity"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "if",
+              "test": {
+                "and": [
+                  {
+                    "gt": [
+                      {
+                        "get": "scope.base"
+                      },
+                      0
+                    ]
+                  },
+                  {
+                    "gte": [
+                      {
+                        "get": "scope.qty"
+                      },
+                      {
+                        "coalesce": [
+                          {
+                            "get": "promo.minimum_qty"
+                          },
+                          0
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "then": [
+                {
+                  "op": "let",
+                  "name": "promo_discount",
+                  "value": {
+                    "if": {
+                      "test": {
+                        "eq": [
+                          {
+                            "get": "promo.promotion_type"
+                          },
+                          "Percentage Discount"
+                        ]
+                      },
+                      "then": {
+                        "div": [
+                          {
+                            "mul": [
+                              {
+                                "get": "scope.base"
+                              },
+                              {
+                                "coalesce": [
+                                  {
+                                    "get": "promo.discount_percentage"
+                                  },
+                                  0
+                                ]
+                              }
+                            ]
+                          },
+                          100
+                        ]
+                      },
+                      "else": {
+                        "if": {
+                          "test": {
+                            "eq": [
+                              {
+                                "get": "promo.promotion_type"
+                              },
+                              "Amount Discount"
+                            ]
+                          },
+                          "then": {
+                            "coalesce": [
+                              {
+                                "get": "promo.discount_amount"
+                              },
+                              0
+                            ]
+                          },
+                          "else": {
+                            "mul": [
+                              {
+                                "floor": {
+                                  "div": [
+                                    {
+                                      "get": "scope.qty"
+                                    },
+                                    {
+                                      "max": [
+                                        {
+                                          "coalesce": [
+                                            {
+                                              "get": "promo.buy_qty"
+                                            },
+                                            1
+                                          ]
+                                        },
+                                        1
+                                      ]
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "coalesce": [
+                                  {
+                                    "get": "promo.free_qty"
+                                  },
+                                  1
+                                ]
+                              },
+                              {
+                                "if": {
+                                  "test": {
+                                    "gt": [
+                                      {
+                                        "get": "scope.qty"
+                                      },
+                                      0
+                                    ]
+                                  },
+                                  "then": {
+                                    "div": [
+                                      {
+                                        "get": "scope.base"
+                                      },
+                                      {
+                                        "get": "scope.qty"
+                                      }
+                                    ]
+                                  },
+                                  "else": 0
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "if",
+                  "test": {
+                    "gt": [
+                      {
+                        "coalesce": [
+                          {
+                            "get": "promo.maximum_discount_amount"
+                          },
+                          0
+                        ]
+                      },
+                      0
+                    ]
+                  },
+                  "then": [
+                    {
+                      "op": "set",
+                      "path": "promo_discount",
+                      "value": {
+                        "min": [
+                          {
+                            "get": "promo_discount"
+                          },
+                          {
+                            "get": "promo.maximum_discount_amount"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "op": "set",
+                  "path": "state.discount",
+                  "value": {
+                    "add": [
+                      {
+                        "get": "state.discount"
+                      },
+                      {
+                        "get": "promo_discount"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "op": "set",
+                  "path": "state.rule_name",
+                  "value": {
+                    "get": "promo.promotion_name"
+                  }
+                },
+                {
+                  "op": "set",
+                  "path": "state.message",
+                  "value": {
+                    "concat": [
+                      "Promotion ",
+                      {
+                        "get": "promo.promotion_name"
+                      },
+                      " applied"
+                    ]
+                  }
+                },
+                {
+                  "op": "if",
+                  "test": {
+                    "not": {
+                      "get": "promo.stackable"
+                    }
+                  },
+                  "then": [
+                    {
+                      "op": "set",
+                      "path": "state.stop",
+                      "value": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "op": "return",
+      "value": {
+        "discount_amount": {
+          "min": [
+            {
+              "get": "state.discount"
+            },
+            {
+              "get": "transaction_total"
+            }
+          ]
+        },
+        "message": {
+          "get": "state.message"
+        },
+        "rule_name": {
+          "get": "state.rule_name"
+        }
+      }
+    }
+  ]
+}

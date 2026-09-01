@@ -1,0 +1,69 @@
+{
+  "name": "wmn_pos_extensions",
+  "title": "WMN POS Extensions",
+  "version": "1.0.0",
+  "description": "Portable WMN extension port of the waddah82/wmn wmn16 retail POS enhancements: structured barcodes, native thermal printing, promotions/coupons, cash-movement closing reconciliation and POS menus.",
+  "publisher": "WMN",
+  "license": "Proprietary",
+  "entry_route": "/pos-extensions",
+  "minimum_platform_version": "3.25.0",
+  "required_applications": [
+    "wmn_erp_lite"
+  ],
+  "required_system_modules": [],
+  "required_capabilities": [],
+  "optional_capabilities": [
+    "mobile.scanner",
+    "printing.advanced"
+  ],
+  "modules": [
+    "WMN POS Extensions"
+  ],
+  "workspaces": [
+    "WMN POS Extensions"
+  ],
+  "pages": [
+    "WMN POS Extensions POS"
+  ],
+  "routes": [],
+  "route_definitions": [
+    {
+      "path": "/pos-extensions",
+      "title": "POS Extensions",
+      "target_type": "workspace",
+      "target": "WMN POS Extensions",
+      "icon": "storefront",
+      "section": "WMN POS Extensions",
+      "order": 10,
+      "show_in_navigation": false,
+      "required_roles": [],
+      "required_permissions": []
+    },
+    {
+      "path": "/pos-extensions/counter",
+      "title": "Advanced Point of Sale",
+      "target_type": "page",
+      "target": "WMN POS Extensions POS",
+      "icon": "point_of_sale",
+      "section": "WMN POS Extensions",
+      "order": 20,
+      "show_in_navigation": false,
+      "required_roles": [],
+      "required_permissions": []
+    }
+  ],
+  "metadata_contributions": [
+    "POS Invoice",
+    "POS Profile",
+    "POS Closing Entry",
+    "POS Opening Entry",
+    "Item",
+    "Customer",
+    "Print Format"
+  ],
+  "metadata": {
+    "source_repository": "https://github.com/waddah82/wmn/tree/wmn16",
+    "source_app": "wmn",
+    "port_contract": "WMN-native-no-Frappe-runtime"
+  }
+}

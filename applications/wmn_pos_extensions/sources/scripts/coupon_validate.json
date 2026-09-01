@@ -1,0 +1,96 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "doc.coupon_code"
+        }
+      },
+      "message": "Coupon Code is required."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "gte": [
+          {
+            "coalesce": [
+              {
+                "get": "doc.minimum_cart_amount"
+              },
+              0
+            ]
+          },
+          0
+        ]
+      },
+      "message": "Minimum Cart Amount cannot be negative."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "gte": [
+          {
+            "coalesce": [
+              {
+                "get": "doc.maximum_use"
+              },
+              0
+            ]
+          },
+          0
+        ]
+      },
+      "message": "Maximum Use cannot be negative."
+    },
+    {
+      "op": "if",
+      "test": {
+        "eq": [
+          {
+            "get": "doc.discount_type"
+          },
+          "Percentage"
+        ]
+      },
+      "then": [
+        {
+          "op": "assert",
+          "test": {
+            "and": [
+              {
+                "gte": [
+                  {
+                    "coalesce": [
+                      {
+                        "get": "doc.discount_percentage"
+                      },
+                      0
+                    ]
+                  },
+                  0
+                ]
+              },
+              {
+                "lte": [
+                  {
+                    "coalesce": [
+                      {
+                        "get": "doc.discount_percentage"
+                      },
+                      0
+                    ]
+                  },
+                  100
+                ]
+              }
+            ]
+          },
+          "message": "Discount Percentage must be between 0 and 100."
+        }
+      ]
+    }
+  ]
+}
