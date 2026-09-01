@@ -1,0 +1,322 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "db_get",
+      "doctype": "Company",
+      "name": {
+        "get": "doc.company"
+      },
+      "as": "company"
+    },
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "company"
+        }
+      },
+      "message": "Company is required for POS Profile."
+    },
+    {
+      "op": "db_get",
+      "doctype": "Warehouse",
+      "name": {
+        "get": "doc.warehouse"
+      },
+      "as": "warehouse"
+    },
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "warehouse"
+        }
+      },
+      "message": "Warehouse is required for POS Profile."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "eq": [
+          {
+            "field": {
+              "from": {
+                "get": "warehouse"
+              },
+              "name": "company"
+            }
+          },
+          {
+            "get": "doc.company"
+          }
+        ]
+      },
+      "message": "POS Profile Warehouse must belong to the selected Company."
+    },
+    {
+      "op": "db_get",
+      "doctype": "Customer",
+      "name": {
+        "get": "doc.default_customer"
+      },
+      "as": "customer"
+    },
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "customer"
+        }
+      },
+      "message": "Default Customer is required for POS Profile."
+    },
+    {
+      "op": "set",
+      "path": "doc.currency",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.currency"
+          },
+          {
+            "field": {
+              "from": {
+                "get": "company"
+              },
+              "name": "default_currency"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.print_format_id",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.print_format_id"
+          },
+          "wmn-erp-pos-receipt"
+        ]
+      }
+    },
+    {
+      "op": "assert",
+      "test": {
+        "gt": [
+          {
+            "len": {
+              "get": "doc.payment_modes"
+            }
+          },
+          0
+        ]
+      },
+      "message": "Configure at least one POS Profile payment method."
+    },
+    {
+      "op": "let",
+      "name": "default_payment_count",
+      "value": {
+        "sum": {
+          "items": {
+            "get": "doc.payment_modes"
+          },
+          "as": "p",
+          "value": {
+            "coalesce": [
+              {
+                "get": "p.is_default"
+              },
+              0
+            ]
+          }
+        }
+      }
+    },
+    {
+      "op": "assert",
+      "test": {
+        "eq": [
+          {
+            "get": "default_payment_count"
+          },
+          1
+        ]
+      },
+      "message": "Exactly one POS Profile payment method must be marked default."
+    },
+    {
+      "op": "for_each",
+      "items": {
+        "get": "doc.payment_modes"
+      },
+      "as": "row",
+      "steps": [
+        {
+          "op": "assert",
+          "test": {
+            "not_empty": {
+              "get": "row.mode_of_payment"
+            }
+          },
+          "message": "Mode of Payment is required in POS Profile payment methods."
+        },
+        {
+          "op": "db_get",
+          "doctype": "Mode of Payment",
+          "name": {
+            "get": "row.mode_of_payment"
+          },
+          "as": "mop"
+        },
+        {
+          "op": "assert",
+          "test": {
+            "not_empty": {
+              "get": "mop"
+            }
+          },
+          "message": "Unknown POS Profile Mode of Payment."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "eq": [
+              {
+                "coalesce": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "mop"
+                      },
+                      "name": "enabled"
+                    }
+                  },
+                  1
+                ]
+              },
+              1
+            ]
+          },
+          "message": "Disabled Mode of Payment cannot be configured on POS Profile."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "eq": [
+              {
+                "field": {
+                  "from": {
+                    "get": "mop"
+                  },
+                  "name": "company"
+                }
+              },
+              {
+                "get": "doc.company"
+              }
+            ]
+          },
+          "message": "POS Profile Mode of Payment must belong to the selected Company."
+        },
+        {
+          "op": "if",
+          "test": {
+            "eq": [
+              {
+                "coalesce": [
+                  {
+                    "get": "row.is_default"
+                  },
+                  0
+                ]
+              },
+              1
+            ]
+          },
+          "then": [
+            {
+              "op": "assert",
+              "test": {
+                "eq": [
+                  {
+                    "get": "row.mode_of_payment"
+                  },
+                  {
+                    "get": "doc.default_mode_of_payment"
+                  }
+                ]
+              },
+              "message": "Default Mode of Payment must match the payment row marked default."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "op": "db_get",
+      "doctype": "Price List",
+      "name": {
+        "get": "doc.selling_price_list"
+      },
+      "as": "price_list"
+    },
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "price_list"
+        }
+      },
+      "message": "Selling Price List is required for POS Profile."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "eq": [
+          {
+            "coalesce": [
+              {
+                "field": {
+                  "from": {
+                    "get": "price_list"
+                  },
+                  "name": "enabled"
+                }
+              },
+              1
+            ]
+          },
+          1
+        ]
+      },
+      "message": "POS Profile Selling Price List is disabled."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "eq": [
+          {
+            "coalesce": [
+              {
+                "field": {
+                  "from": {
+                    "get": "price_list"
+                  },
+                  "name": "selling"
+                }
+              },
+              0
+            ]
+          },
+          1
+        ]
+      },
+      "message": "POS Profile Price List must be a selling Price List."
+    }
+  ]
+}

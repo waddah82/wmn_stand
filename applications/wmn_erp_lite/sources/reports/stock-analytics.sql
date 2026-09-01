@@ -1,0 +1,1 @@
+SELECT posting_date,item_code,warehouse,SUM(actual_qty) AS qty_movement,SUM(stock_value_difference) AS value_movement FROM "tabStock Ledger Entry" WHERE (%(company)s='' OR company=%(company)s) AND (%(from_date)s='' OR posting_date>=%(from_date)s) AND (%(to_date)s='' OR posting_date<=%(to_date)s) GROUP BY posting_date,item_code,warehouse ORDER BY posting_date,item_code,warehouse

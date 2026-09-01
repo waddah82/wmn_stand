@@ -1,0 +1,1 @@
+SELECT tax_rate,COUNT(*) AS invoice_count,SUM(net_total) AS taxable_amount,SUM(tax_amount) AS tax_amount,SUM(grand_total) AS grand_total FROM "tabPurchase Invoice" WHERE docstatus=1 AND (%(company)s='' OR company=%(company)s) AND (%(from_date)s='' OR posting_date>=%(from_date)s) AND (%(to_date)s='' OR posting_date<=%(to_date)s) GROUP BY tax_rate ORDER BY tax_rate

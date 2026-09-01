@@ -1,0 +1,1 @@
+SELECT g.party AS supplier,SUM(g.credit-g.debit) AS outstanding FROM "tabGL Entry" g JOIN "tabAccount" a ON a.name=g.account WHERE (%(company)s='' OR g.company=%(company)s) AND g.party_type='Supplier' AND a.account_type='Payable' AND (%(to_date)s='' OR g.posting_date<=%(to_date)s) GROUP BY g.party HAVING ABS(SUM(g.credit-g.debit))>0.0001 ORDER BY outstanding DESC

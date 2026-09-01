@@ -1,0 +1,215 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "db_list",
+      "doctype": "Stock Posting Snapshot",
+      "filters": [
+        [
+          "voucher_type",
+          "=",
+          "Stock Reconciliation"
+        ],
+        [
+          "voucher_no",
+          "=",
+          {
+            "get": "doc.name"
+          }
+        ]
+      ],
+      "order_by": "sequence_no desc",
+      "limit": 500,
+      "as": "snapshot_refs",
+      "fields": [
+        "name"
+      ]
+    },
+    {
+      "op": "for_each",
+      "items": {
+        "get": "snapshot_refs"
+      },
+      "as": "snapshot_ref",
+      "steps": [
+        {
+          "op": "db_get",
+          "doctype": "Stock Posting Snapshot",
+          "name": {
+            "get": "snapshot_ref.name"
+          },
+          "as": "snap"
+        },
+        {
+          "op": "db_get",
+          "doctype": "Bin",
+          "filters": [
+            [
+              "item_code",
+              "=",
+              {
+                "get": "snap.item_code"
+              }
+            ],
+            [
+              "warehouse",
+              "=",
+              {
+                "get": "snap.warehouse"
+              }
+            ]
+          ],
+          "as": "current_bin"
+        },
+        {
+          "op": "assert",
+          "test": {
+            "close": [
+              {
+                "coalesce": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "current_bin"
+                      },
+                      "name": "actual_qty"
+                    }
+                  },
+                  0
+                ]
+              },
+              {
+                "get": "snap.expected_after_qty"
+              },
+              0.0005
+            ]
+          },
+          "message": "Cannot cancel this stock transaction because a later stock movement changed {{ snap.item_code }} in {{ snap.warehouse }}. Cancel later stock transactions first."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "close": [
+              {
+                "coalesce": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "current_bin"
+                      },
+                      "name": "stock_value"
+                    }
+                  },
+                  0
+                ]
+              },
+              {
+                "get": "snap.expected_after_stock_value"
+              },
+              0.01
+            ]
+          },
+          "message": "Cannot cancel this stock transaction because stock valuation changed after posting for {{ snap.item_code }} in {{ snap.warehouse }}."
+        },
+        {
+          "op": "db_upsert",
+          "doctype": "Bin",
+          "name": {
+            "concat": [
+              {
+                "get": "snap.item_code"
+              },
+              "::",
+              {
+                "get": "snap.warehouse"
+              }
+            ]
+          },
+          "values": {
+            "name": {
+              "concat": [
+                {
+                  "get": "snap.item_code"
+                },
+                "::",
+                {
+                  "get": "snap.warehouse"
+                }
+              ]
+            },
+            "item_code": {
+              "get": "snap.item_code"
+            },
+            "warehouse": {
+              "get": "snap.warehouse"
+            },
+            "actual_qty": {
+              "get": "snap.previous_qty"
+            },
+            "valuation_rate": {
+              "get": "snap.previous_valuation_rate"
+            },
+            "stock_value": {
+              "get": "snap.previous_stock_value"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "op": "db_delete",
+      "doctype": "Stock Ledger Entry",
+      "filters": [
+        [
+          "voucher_type",
+          "=",
+          "Stock Reconciliation"
+        ],
+        [
+          "voucher_no",
+          "=",
+          {
+            "get": "doc.name"
+          }
+        ]
+      ]
+    },
+    {
+      "op": "db_delete",
+      "doctype": "Stock Posting Snapshot",
+      "filters": [
+        [
+          "voucher_type",
+          "=",
+          "Stock Reconciliation"
+        ],
+        [
+          "voucher_no",
+          "=",
+          {
+            "get": "doc.name"
+          }
+        ]
+      ]
+    },
+    {
+      "op": "db_delete",
+      "doctype": "GL Entry",
+      "filters": [
+        [
+          "voucher_type",
+          "=",
+          "Stock Reconciliation"
+        ],
+        [
+          "voucher_no",
+          "=",
+          {
+            "get": "doc.name"
+          }
+        ]
+      ]
+    }
+  ]
+}

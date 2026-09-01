@@ -1,0 +1,1 @@
+SELECT b.warehouse,COUNT(*) AS item_count,SUM(b.actual_qty) AS total_qty,SUM(b.stock_value) AS stock_value FROM "tabBin" b JOIN "tabWarehouse" w ON w.name=b.warehouse WHERE (%(company)s='' OR w.company=%(company)s) GROUP BY b.warehouse ORDER BY b.warehouse

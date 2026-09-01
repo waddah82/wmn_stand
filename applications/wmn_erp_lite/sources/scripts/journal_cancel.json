@@ -1,0 +1,24 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "db_delete",
+      "doctype": "GL Entry",
+      "filters": [
+        [
+          "voucher_type",
+          "=",
+          "Journal Entry"
+        ],
+        [
+          "voucher_no",
+          "=",
+          {
+            "get": "doc.name"
+          }
+        ]
+      ]
+    }
+  ]
+}

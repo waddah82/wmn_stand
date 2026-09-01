@@ -1,0 +1,1 @@
+SELECT b.item_code,i.item_name,b.warehouse,b.actual_qty,b.valuation_rate,b.stock_value FROM "tabBin" b LEFT JOIN "tabItem" i ON i.name=b.item_code WHERE (%(item_code)s='' OR b.item_code=%(item_code)s) AND (%(warehouse)s='' OR b.warehouse=%(warehouse)s) ORDER BY b.item_code,b.warehouse

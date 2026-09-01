@@ -1,0 +1,366 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "db_get",
+      "doctype": "POS Opening Entry",
+      "name": {
+        "get": "doc.pos_opening_entry"
+      },
+      "as": "opening"
+    },
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "opening"
+        }
+      },
+      "message": "POS Opening Entry is required."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "eq": [
+          {
+            "field": {
+              "from": {
+                "get": "opening"
+              },
+              "name": "docstatus"
+            }
+          },
+          1
+        ]
+      },
+      "message": "POS Opening Entry must be submitted."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "eq": [
+          {
+            "field": {
+              "from": {
+                "get": "opening"
+              },
+              "name": "status"
+            }
+          },
+          "Open"
+        ]
+      },
+      "message": "POS Opening Entry is already closed."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "empty": {
+          "field": {
+            "from": {
+              "get": "opening"
+            },
+            "name": "closing_entry"
+          }
+        }
+      },
+      "message": "POS Opening Entry already has a Closing Entry."
+    },
+    {
+      "op": "set",
+      "path": "doc.pos_profile",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.pos_profile"
+          },
+          {
+            "field": {
+              "from": {
+                "get": "opening"
+              },
+              "name": "pos_profile"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.company",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.company"
+          },
+          {
+            "field": {
+              "from": {
+                "get": "opening"
+              },
+              "name": "company"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.posting_date",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.posting_date"
+          },
+          {
+            "today": true
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.closing_time",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.closing_time"
+          },
+          {
+            "now": true
+          }
+        ]
+      }
+    },
+    {
+      "op": "db_list",
+      "doctype": "POS Invoice",
+      "fields": [
+        "name"
+      ],
+      "filters": [
+        [
+          "pos_opening_entry",
+          "=",
+          {
+            "get": "doc.pos_opening_entry"
+          }
+        ],
+        [
+          "docstatus",
+          "=",
+          0
+        ],
+        [
+          "pos_status",
+          "=",
+          "Held"
+        ]
+      ],
+      "limit": 1,
+      "as": "held_invoices"
+    },
+    {
+      "op": "assert",
+      "test": {
+        "eq": [
+          {
+            "len": {
+              "get": "held_invoices"
+            }
+          },
+          0
+        ]
+      },
+      "message": "Held POS invoices must be completed or discarded before closing the POS shift."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "gt": [
+          {
+            "len": {
+              "get": "doc.details"
+            }
+          },
+          0
+        ]
+      },
+      "message": "Payment reconciliation details are required."
+    },
+    {
+      "op": "for_each",
+      "items": {
+        "get": "doc.details"
+      },
+      "as": "row",
+      "steps": [
+        {
+          "op": "assert",
+          "test": {
+            "not_empty": {
+              "get": "row.mode_of_payment"
+            }
+          },
+          "message": "Mode of Payment is required."
+        },
+        {
+          "op": "db_list",
+          "doctype": "POS Profile Payment",
+          "fields": [
+            "name",
+            "mode_of_payment"
+          ],
+          "filters": [
+            [
+              "parent",
+              "=",
+              {
+                "get": "doc.pos_profile"
+              }
+            ],
+            [
+              "mode_of_payment",
+              "=",
+              {
+                "get": "row.mode_of_payment"
+              }
+            ]
+          ],
+          "limit": 1,
+          "as": "configured_payment"
+        },
+        {
+          "op": "assert",
+          "test": {
+            "eq": [
+              {
+                "len": {
+                  "get": "configured_payment"
+                }
+              },
+              1
+            ]
+          },
+          "message": "Closing Mode of Payment is not configured in the POS Profile."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "gte": [
+              {
+                "coalesce": [
+                  {
+                    "get": "row.closing_amount"
+                  },
+                  0
+                ]
+              },
+              0
+            ]
+          },
+          "message": "Closing amount cannot be negative."
+        },
+        {
+          "op": "set",
+          "path": "row.difference_amount",
+          "value": {
+            "round": {
+              "value": {
+                "sub": [
+                  {
+                    "coalesce": [
+                      {
+                        "get": "row.closing_amount"
+                      },
+                      0
+                    ]
+                  },
+                  {
+                    "coalesce": [
+                      {
+                        "get": "row.expected_amount"
+                      },
+                      0
+                    ]
+                  }
+                ]
+              },
+              "precision": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "op": "set",
+      "path": "doc.total_expected",
+      "value": {
+        "round": {
+          "value": {
+            "sum": {
+              "items": {
+                "get": "doc.details"
+              },
+              "as": "r",
+              "value": {
+                "coalesce": [
+                  {
+                    "get": "r.expected_amount"
+                  },
+                  0
+                ]
+              }
+            }
+          },
+          "precision": 2
+        }
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.total_closing",
+      "value": {
+        "round": {
+          "value": {
+            "sum": {
+              "items": {
+                "get": "doc.details"
+              },
+              "as": "r",
+              "value": {
+                "coalesce": [
+                  {
+                    "get": "r.closing_amount"
+                  },
+                  0
+                ]
+              }
+            }
+          },
+          "precision": 2
+        }
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.total_difference",
+      "value": {
+        "round": {
+          "value": {
+            "sub": [
+              {
+                "get": "doc.total_closing"
+              },
+              {
+                "get": "doc.total_expected"
+              }
+            ]
+          },
+          "precision": 2
+        }
+      }
+    }
+  ]
+}

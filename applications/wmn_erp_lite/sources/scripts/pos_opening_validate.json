@@ -1,0 +1,222 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "db_get",
+      "doctype": "POS Profile",
+      "name": {
+        "get": "doc.pos_profile"
+      },
+      "as": "profile"
+    },
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "profile"
+        }
+      },
+      "message": "POS Profile is required."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "eq": [
+          {
+            "db_count": {
+              "doctype": "POS Opening Entry",
+              "filters": [
+                [
+                  "pos_profile",
+                  "=",
+                  {
+                    "get": "doc.pos_profile"
+                  }
+                ],
+                [
+                  "status",
+                  "=",
+                  "Open"
+                ],
+                [
+                  "docstatus",
+                  "=",
+                  1
+                ]
+              ]
+            }
+          },
+          0
+        ]
+      },
+      "message": "Another open POS session already exists for this POS Profile."
+    },
+    {
+      "op": "set",
+      "path": "doc.company",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.company"
+          },
+          {
+            "field": {
+              "from": {
+                "get": "profile"
+              },
+              "name": "company"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.posting_date",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.posting_date"
+          },
+          {
+            "today": true
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.opening_time",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.opening_time"
+          },
+          {
+            "now": true
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.status",
+      "value": "Open"
+    },
+    {
+      "op": "assert",
+      "test": {
+        "gt": [
+          {
+            "len": {
+              "get": "doc.balances"
+            }
+          },
+          0
+        ]
+      },
+      "message": "At least one opening payment balance is required."
+    },
+    {
+      "op": "for_each",
+      "items": {
+        "get": "doc.balances"
+      },
+      "as": "row",
+      "steps": [
+        {
+          "op": "assert",
+          "test": {
+            "not_empty": {
+              "get": "row.mode_of_payment"
+            }
+          },
+          "message": "Mode of Payment is required."
+        },
+        {
+          "op": "db_list",
+          "doctype": "POS Profile Payment",
+          "fields": [
+            "name",
+            "mode_of_payment"
+          ],
+          "filters": [
+            [
+              "parent",
+              "=",
+              {
+                "get": "doc.pos_profile"
+              }
+            ],
+            [
+              "mode_of_payment",
+              "=",
+              {
+                "get": "row.mode_of_payment"
+              }
+            ]
+          ],
+          "limit": 1,
+          "as": "configured_payment"
+        },
+        {
+          "op": "assert",
+          "test": {
+            "eq": [
+              {
+                "len": {
+                  "get": "configured_payment"
+                }
+              },
+              1
+            ]
+          },
+          "message": "Opening balance Mode of Payment is not configured in the POS Profile."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "gte": [
+              {
+                "coalesce": [
+                  {
+                    "get": "row.opening_amount"
+                  },
+                  0
+                ]
+              },
+              0
+            ]
+          },
+          "message": "Opening amount cannot be negative."
+        }
+      ]
+    },
+    {
+      "op": "set",
+      "path": "doc.opening_total",
+      "value": {
+        "round": {
+          "value": {
+            "sum": {
+              "items": {
+                "get": "doc.balances"
+              },
+              "as": "r",
+              "value": {
+                "coalesce": [
+                  {
+                    "get": "r.opening_amount"
+                  },
+                  0
+                ]
+              }
+            }
+          },
+          "precision": 2
+        }
+      }
+    }
+  ]
+}

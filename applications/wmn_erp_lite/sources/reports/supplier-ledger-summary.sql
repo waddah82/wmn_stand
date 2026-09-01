@@ -1,0 +1,1 @@
+SELECT party AS supplier,SUM(debit) AS debit,SUM(credit) AS credit,SUM(credit-debit) AS balance FROM "tabGL Entry" WHERE party_type='Supplier' AND party IS NOT NULL AND party<>'' AND (%(company)s='' OR company=%(company)s) AND (%(from_date)s='' OR posting_date>=%(from_date)s) AND (%(to_date)s='' OR posting_date<=%(to_date)s) GROUP BY party ORDER BY party

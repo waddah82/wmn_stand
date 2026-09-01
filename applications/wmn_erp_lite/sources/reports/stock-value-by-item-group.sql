@@ -1,0 +1,1 @@
+SELECT i.item_group,COUNT(DISTINCT b.item_code) AS item_count,SUM(b.actual_qty) AS total_qty,SUM(b.stock_value) AS stock_value FROM "tabBin" b JOIN "tabItem" i ON i.name=b.item_code JOIN "tabWarehouse" w ON w.name=b.warehouse WHERE (%(company)s='' OR w.company=%(company)s) GROUP BY i.item_group ORDER BY stock_value DESC

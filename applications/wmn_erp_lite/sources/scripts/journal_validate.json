@@ -1,0 +1,229 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "doc.company"
+        }
+      },
+      "message": "Company is required."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "doc.posting_date"
+        }
+      },
+      "message": "Posting Date is required."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "gt": [
+          {
+            "len": {
+              "get": "doc.accounts"
+            }
+          },
+          0
+        ]
+      },
+      "message": "Journal Entry requires at least one account row."
+    },
+    {
+      "op": "for_each",
+      "items": {
+        "get": "doc.accounts"
+      },
+      "as": "row",
+      "steps": [
+        {
+          "op": "assert",
+          "test": {
+            "not_empty": {
+              "get": "row.account"
+            }
+          },
+          "message": "Account is required on every row."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "or": [
+              {
+                "gt": [
+                  {
+                    "get": "row.debit"
+                  },
+                  0
+                ]
+              },
+              {
+                "gt": [
+                  {
+                    "get": "row.credit"
+                  },
+                  0
+                ]
+              }
+            ]
+          },
+          "message": "Each row requires a debit or credit amount."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "not": {
+              "and": [
+                {
+                  "gt": [
+                    {
+                      "get": "row.debit"
+                    },
+                    0
+                  ]
+                },
+                {
+                  "gt": [
+                    {
+                      "get": "row.credit"
+                    },
+                    0
+                  ]
+                }
+              ]
+            }
+          },
+          "message": "A journal row cannot contain both debit and credit."
+        },
+        {
+          "op": "db_get",
+          "doctype": "Account",
+          "name": {
+            "get": "row.account"
+          },
+          "as": "acct"
+        },
+        {
+          "op": "assert",
+          "test": {
+            "eq": [
+              {
+                "field": {
+                  "from": {
+                    "get": "acct"
+                  },
+                  "name": "company"
+                }
+              },
+              {
+                "get": "doc.company"
+              }
+            ]
+          },
+          "message": "Journal account belongs to a different company."
+        }
+      ]
+    },
+    {
+      "op": "set",
+      "path": "doc.total_debit",
+      "value": {
+        "round": {
+          "value": {
+            "sum": {
+              "items": {
+                "get": "doc.accounts"
+              },
+              "as": "r",
+              "value": {
+                "coalesce": [
+                  {
+                    "get": "r.debit"
+                  },
+                  0
+                ]
+              }
+            }
+          },
+          "precision": 2
+        }
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.total_credit",
+      "value": {
+        "round": {
+          "value": {
+            "sum": {
+              "items": {
+                "get": "doc.accounts"
+              },
+              "as": "r",
+              "value": {
+                "coalesce": [
+                  {
+                    "get": "r.credit"
+                  },
+                  0
+                ]
+              }
+            }
+          },
+          "precision": 2
+        }
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.difference",
+      "value": {
+        "round": {
+          "value": {
+            "sub": [
+              {
+                "get": "doc.total_debit"
+              },
+              {
+                "get": "doc.total_credit"
+              }
+            ]
+          },
+          "precision": 2
+        }
+      }
+    },
+    {
+      "op": "assert",
+      "test": {
+        "gt": [
+          {
+            "get": "doc.total_debit"
+          },
+          0
+        ]
+      },
+      "message": "Journal total must be greater than zero."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "close": [
+          {
+            "get": "doc.total_debit"
+          },
+          {
+            "get": "doc.total_credit"
+          },
+          0.005
+        ]
+      },
+      "message": "Total Debit must equal Total Credit."
+    }
+  ]
+}

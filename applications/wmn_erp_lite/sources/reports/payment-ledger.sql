@@ -1,0 +1,1 @@
+SELECT posting_date,party_type,party,account,voucher_type,voucher_no,amount FROM "tabPayment Ledger Entry" WHERE (%(company)s='' OR company=%(company)s) AND (%(from_date)s='' OR posting_date>=%(from_date)s) AND (%(to_date)s='' OR posting_date<=%(to_date)s) ORDER BY posting_date,name

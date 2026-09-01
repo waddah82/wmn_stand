@@ -1,0 +1,34 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "assert",
+      "test": {
+        "eq": [
+          {
+            "db_count": {
+              "doctype": "POS Invoice",
+              "filters": [
+                [
+                  "pos_opening_entry",
+                  "=",
+                  {
+                    "get": "doc.name"
+                  }
+                ],
+                [
+                  "docstatus",
+                  "=",
+                  1
+                ]
+              ]
+            }
+          },
+          0
+        ]
+      },
+      "message": "Cannot cancel a POS Opening Entry that has submitted POS Invoices."
+    }
+  ]
+}

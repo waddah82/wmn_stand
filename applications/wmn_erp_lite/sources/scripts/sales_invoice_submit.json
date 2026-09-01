@@ -1,0 +1,470 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "db_insert",
+      "doctype": "GL Entry",
+      "values": {
+        "company": {
+          "get": "doc.company"
+        },
+        "posting_date": {
+          "get": "doc.posting_date"
+        },
+        "account": {
+          "get": "doc.receivable_account"
+        },
+        "party_type": "Customer",
+        "party": {
+          "get": "doc.customer"
+        },
+        "voucher_type": "Sales Invoice",
+        "voucher_no": {
+          "get": "doc.name"
+        },
+        "debit": {
+          "get": "doc.grand_total"
+        },
+        "credit": 0,
+        "remarks": {
+          "get": "doc.remarks"
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "GL Entry",
+      "values": {
+        "company": {
+          "get": "doc.company"
+        },
+        "posting_date": {
+          "get": "doc.posting_date"
+        },
+        "account": {
+          "get": "doc.income_account"
+        },
+        "voucher_type": "Sales Invoice",
+        "voucher_no": {
+          "get": "doc.name"
+        },
+        "debit": 0,
+        "credit": {
+          "get": "doc.net_total"
+        },
+        "remarks": "Sales"
+      }
+    },
+    {
+      "op": "if",
+      "test": {
+        "gt": [
+          {
+            "get": "doc.tax_amount"
+          },
+          0
+        ]
+      },
+      "then": [
+        {
+          "op": "db_insert",
+          "doctype": "GL Entry",
+          "values": {
+            "company": {
+              "get": "doc.company"
+            },
+            "posting_date": {
+              "get": "doc.posting_date"
+            },
+            "account": {
+              "get": "doc.tax_account"
+            },
+            "voucher_type": "Sales Invoice",
+            "voucher_no": {
+              "get": "doc.name"
+            },
+            "debit": 0,
+            "credit": {
+              "get": "doc.tax_amount"
+            },
+            "remarks": "Output Tax"
+          }
+        }
+      ]
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Payment Ledger Entry",
+      "values": {
+        "company": {
+          "get": "doc.company"
+        },
+        "posting_date": {
+          "get": "doc.posting_date"
+        },
+        "party_type": "Customer",
+        "party": {
+          "get": "doc.customer"
+        },
+        "account": {
+          "get": "doc.receivable_account"
+        },
+        "voucher_type": "Sales Invoice",
+        "voucher_no": {
+          "get": "doc.name"
+        },
+        "amount": {
+          "get": "doc.grand_total"
+        }
+      }
+    },
+    {
+      "op": "if",
+      "test": {
+        "eq": [
+          {
+            "get": "doc.update_stock"
+          },
+          1
+        ]
+      },
+      "then": [
+        {
+          "op": "for_each",
+          "items": {
+            "get": "doc.items"
+          },
+          "as": "row",
+          "index_as": "line_index",
+          "steps": [
+            {
+              "op": "db_get",
+              "doctype": "Bin",
+              "filters": [
+                [
+                  "item_code",
+                  "=",
+                  {
+                    "get": "row.item_code"
+                  }
+                ],
+                [
+                  "warehouse",
+                  "=",
+                  {
+                    "get": "row.warehouse"
+                  }
+                ]
+              ],
+              "as": "bin"
+            },
+            {
+              "op": "let",
+              "name": "old_qty",
+              "value": {
+                "coalesce": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "bin"
+                      },
+                      "name": "actual_qty"
+                    }
+                  },
+                  0
+                ]
+              }
+            },
+            {
+              "op": "let",
+              "name": "rate",
+              "value": {
+                "coalesce": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "bin"
+                      },
+                      "name": "valuation_rate"
+                    }
+                  },
+                  0
+                ]
+              }
+            },
+            {
+              "op": "let",
+              "name": "old_value",
+              "value": {
+                "coalesce": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "bin"
+                      },
+                      "name": "stock_value"
+                    }
+                  },
+                  0
+                ]
+              }
+            },
+            {
+              "op": "assert",
+              "test": {
+                "gte": [
+                  {
+                    "get": "old_qty"
+                  },
+                  {
+                    "get": "row.qty"
+                  }
+                ]
+              },
+              "message": "Insufficient stock for {{ row.item_code }} in {{ row.warehouse }}."
+            },
+            {
+              "op": "let",
+              "name": "new_qty",
+              "value": {
+                "sub": [
+                  {
+                    "get": "old_qty"
+                  },
+                  {
+                    "get": "row.qty"
+                  }
+                ]
+              }
+            },
+            {
+              "op": "let",
+              "name": "cost",
+              "value": {
+                "round": {
+                  "value": {
+                    "mul": [
+                      {
+                        "get": "row.qty"
+                      },
+                      {
+                        "get": "rate"
+                      }
+                    ]
+                  },
+                  "precision": 2
+                }
+              }
+            },
+            {
+              "op": "let",
+              "name": "new_value",
+              "value": {
+                "round": {
+                  "value": {
+                    "sub": [
+                      {
+                        "get": "old_value"
+                      },
+                      {
+                        "get": "cost"
+                      }
+                    ]
+                  },
+                  "precision": 2
+                }
+              }
+            },
+            {
+              "op": "db_insert",
+              "doctype": "Stock Posting Snapshot",
+              "values": {
+                "voucher_type": "Sales Invoice",
+                "voucher_no": {
+                  "get": "doc.name"
+                },
+                "sequence_no": {
+                  "get": "line_index"
+                },
+                "item_code": {
+                  "get": "row.item_code"
+                },
+                "warehouse": {
+                  "get": "row.warehouse"
+                },
+                "previous_qty": {
+                  "get": "old_qty"
+                },
+                "previous_valuation_rate": {
+                  "get": "rate"
+                },
+                "previous_stock_value": {
+                  "get": "old_value"
+                },
+                "expected_after_qty": {
+                  "get": "new_qty"
+                },
+                "expected_after_valuation_rate": {
+                  "get": "rate"
+                },
+                "expected_after_stock_value": {
+                  "get": "new_value"
+                }
+              }
+            },
+            {
+              "op": "db_upsert",
+              "doctype": "Bin",
+              "name": {
+                "concat": [
+                  {
+                    "get": "row.item_code"
+                  },
+                  "::",
+                  {
+                    "get": "row.warehouse"
+                  }
+                ]
+              },
+              "values": {
+                "name": {
+                  "concat": [
+                    {
+                      "get": "row.item_code"
+                    },
+                    "::",
+                    {
+                      "get": "row.warehouse"
+                    }
+                  ]
+                },
+                "item_code": {
+                  "get": "row.item_code"
+                },
+                "warehouse": {
+                  "get": "row.warehouse"
+                },
+                "actual_qty": {
+                  "get": "new_qty"
+                },
+                "valuation_rate": {
+                  "get": "rate"
+                },
+                "stock_value": {
+                  "get": "new_value"
+                }
+              }
+            },
+            {
+              "op": "db_insert",
+              "doctype": "Stock Ledger Entry",
+              "values": {
+                "company": {
+                  "get": "doc.company"
+                },
+                "posting_date": {
+                  "get": "doc.posting_date"
+                },
+                "item_code": {
+                  "get": "row.item_code"
+                },
+                "warehouse": {
+                  "get": "row.warehouse"
+                },
+                "voucher_type": "Sales Invoice",
+                "voucher_no": {
+                  "get": "doc.name"
+                },
+                "actual_qty": {
+                  "mul": [
+                    {
+                      "get": "row.qty"
+                    },
+                    -1
+                  ]
+                },
+                "qty_after_transaction": {
+                  "get": "new_qty"
+                },
+                "valuation_rate": {
+                  "get": "rate"
+                },
+                "stock_value_difference": {
+                  "mul": [
+                    {
+                      "get": "cost"
+                    },
+                    -1
+                  ]
+                },
+                "remarks": "Sales issue"
+              }
+            },
+            {
+              "op": "if",
+              "test": {
+                "gt": [
+                  {
+                    "get": "cost"
+                  },
+                  0
+                ]
+              },
+              "then": [
+                {
+                  "op": "db_insert",
+                  "doctype": "GL Entry",
+                  "values": {
+                    "company": {
+                      "get": "doc.company"
+                    },
+                    "posting_date": {
+                      "get": "doc.posting_date"
+                    },
+                    "account": {
+                      "get": "doc.cogs_account"
+                    },
+                    "voucher_type": "Sales Invoice",
+                    "voucher_no": {
+                      "get": "doc.name"
+                    },
+                    "debit": {
+                      "get": "cost"
+                    },
+                    "credit": 0,
+                    "remarks": "Sales Cost of Goods Sold"
+                  }
+                },
+                {
+                  "op": "db_insert",
+                  "doctype": "GL Entry",
+                  "values": {
+                    "company": {
+                      "get": "doc.company"
+                    },
+                    "posting_date": {
+                      "get": "doc.posting_date"
+                    },
+                    "account": {
+                      "get": "doc.stock_account"
+                    },
+                    "voucher_type": "Sales Invoice",
+                    "voucher_no": {
+                      "get": "doc.name"
+                    },
+                    "debit": 0,
+                    "credit": {
+                      "get": "cost"
+                    },
+                    "remarks": "Sales Stock Asset"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

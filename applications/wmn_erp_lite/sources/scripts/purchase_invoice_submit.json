@@ -1,0 +1,475 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "let",
+      "name": "debit_account",
+      "value": {
+        "if": {
+          "test": {
+            "eq": [
+              {
+                "get": "doc.update_stock"
+              },
+              1
+            ]
+          },
+          "then": {
+            "get": "doc.stock_account"
+          },
+          "else": {
+            "get": "doc.expense_account"
+          }
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "GL Entry",
+      "values": {
+        "company": {
+          "get": "doc.company"
+        },
+        "posting_date": {
+          "get": "doc.posting_date"
+        },
+        "account": {
+          "get": "debit_account"
+        },
+        "voucher_type": "Purchase Invoice",
+        "voucher_no": {
+          "get": "doc.name"
+        },
+        "debit": {
+          "get": "doc.net_total"
+        },
+        "credit": 0,
+        "remarks": {
+          "get": "doc.remarks"
+        }
+      }
+    },
+    {
+      "op": "if",
+      "test": {
+        "gt": [
+          {
+            "get": "doc.tax_amount"
+          },
+          0
+        ]
+      },
+      "then": [
+        {
+          "op": "db_insert",
+          "doctype": "GL Entry",
+          "values": {
+            "company": {
+              "get": "doc.company"
+            },
+            "posting_date": {
+              "get": "doc.posting_date"
+            },
+            "account": {
+              "get": "doc.tax_account"
+            },
+            "voucher_type": "Purchase Invoice",
+            "voucher_no": {
+              "get": "doc.name"
+            },
+            "debit": {
+              "get": "doc.tax_amount"
+            },
+            "credit": 0,
+            "remarks": "Input Tax"
+          }
+        }
+      ]
+    },
+    {
+      "op": "db_insert",
+      "doctype": "GL Entry",
+      "values": {
+        "company": {
+          "get": "doc.company"
+        },
+        "posting_date": {
+          "get": "doc.posting_date"
+        },
+        "account": {
+          "get": "doc.payable_account"
+        },
+        "party_type": "Supplier",
+        "party": {
+          "get": "doc.supplier"
+        },
+        "voucher_type": "Purchase Invoice",
+        "voucher_no": {
+          "get": "doc.name"
+        },
+        "debit": 0,
+        "credit": {
+          "get": "doc.grand_total"
+        },
+        "remarks": {
+          "get": "doc.remarks"
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Payment Ledger Entry",
+      "values": {
+        "company": {
+          "get": "doc.company"
+        },
+        "posting_date": {
+          "get": "doc.posting_date"
+        },
+        "party_type": "Supplier",
+        "party": {
+          "get": "doc.supplier"
+        },
+        "account": {
+          "get": "doc.payable_account"
+        },
+        "voucher_type": "Purchase Invoice",
+        "voucher_no": {
+          "get": "doc.name"
+        },
+        "amount": {
+          "get": "doc.grand_total"
+        }
+      }
+    },
+    {
+      "op": "if",
+      "test": {
+        "eq": [
+          {
+            "get": "doc.update_stock"
+          },
+          1
+        ]
+      },
+      "then": [
+        {
+          "op": "for_each",
+          "items": {
+            "get": "doc.items"
+          },
+          "as": "row",
+          "index_as": "line_index",
+          "steps": [
+            {
+              "op": "db_get",
+              "doctype": "Bin",
+              "filters": [
+                [
+                  "item_code",
+                  "=",
+                  {
+                    "get": "row.item_code"
+                  }
+                ],
+                [
+                  "warehouse",
+                  "=",
+                  {
+                    "get": "row.warehouse"
+                  }
+                ]
+              ],
+              "as": "bin"
+            },
+            {
+              "op": "let",
+              "name": "old_qty",
+              "value": {
+                "coalesce": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "bin"
+                      },
+                      "name": "actual_qty"
+                    }
+                  },
+                  0
+                ]
+              }
+            },
+            {
+              "op": "let",
+              "name": "old_rate",
+              "value": {
+                "coalesce": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "bin"
+                      },
+                      "name": "valuation_rate"
+                    }
+                  },
+                  0
+                ]
+              }
+            },
+            {
+              "op": "let",
+              "name": "old_value",
+              "value": {
+                "coalesce": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "bin"
+                      },
+                      "name": "stock_value"
+                    }
+                  },
+                  0
+                ]
+              }
+            },
+            {
+              "op": "let",
+              "name": "line_value",
+              "value": {
+                "round": {
+                  "value": {
+                    "if": {
+                      "test": {
+                        "gt": [
+                          {
+                            "get": "doc.total"
+                          },
+                          0
+                        ]
+                      },
+                      "then": {
+                        "div": [
+                          {
+                            "mul": [
+                              {
+                                "get": "row.amount"
+                              },
+                              {
+                                "get": "doc.net_total"
+                              }
+                            ]
+                          },
+                          {
+                            "get": "doc.total"
+                          }
+                        ]
+                      },
+                      "else": {
+                        "get": "row.amount"
+                      }
+                    }
+                  },
+                  "precision": 2
+                }
+              }
+            },
+            {
+              "op": "let",
+              "name": "new_qty",
+              "value": {
+                "add": [
+                  {
+                    "get": "old_qty"
+                  },
+                  {
+                    "get": "row.qty"
+                  }
+                ]
+              }
+            },
+            {
+              "op": "let",
+              "name": "new_value",
+              "value": {
+                "round": {
+                  "value": {
+                    "add": [
+                      {
+                        "get": "old_value"
+                      },
+                      {
+                        "get": "line_value"
+                      }
+                    ]
+                  },
+                  "precision": 2
+                }
+              }
+            },
+            {
+              "op": "let",
+              "name": "new_rate",
+              "value": {
+                "if": {
+                  "test": {
+                    "gt": [
+                      {
+                        "get": "new_qty"
+                      },
+                      0
+                    ]
+                  },
+                  "then": {
+                    "div": [
+                      {
+                        "get": "new_value"
+                      },
+                      {
+                        "get": "new_qty"
+                      }
+                    ]
+                  },
+                  "else": {
+                    "get": "row.net_rate"
+                  }
+                }
+              }
+            },
+            {
+              "op": "db_insert",
+              "doctype": "Stock Posting Snapshot",
+              "values": {
+                "voucher_type": "Purchase Invoice",
+                "voucher_no": {
+                  "get": "doc.name"
+                },
+                "sequence_no": {
+                  "get": "line_index"
+                },
+                "item_code": {
+                  "get": "row.item_code"
+                },
+                "warehouse": {
+                  "get": "row.warehouse"
+                },
+                "previous_qty": {
+                  "get": "old_qty"
+                },
+                "previous_valuation_rate": {
+                  "get": "old_rate"
+                },
+                "previous_stock_value": {
+                  "get": "old_value"
+                },
+                "expected_after_qty": {
+                  "get": "new_qty"
+                },
+                "expected_after_valuation_rate": {
+                  "round": {
+                    "value": {
+                      "get": "new_rate"
+                    },
+                    "precision": 2
+                  }
+                },
+                "expected_after_stock_value": {
+                  "get": "new_value"
+                }
+              }
+            },
+            {
+              "op": "db_upsert",
+              "doctype": "Bin",
+              "name": {
+                "concat": [
+                  {
+                    "get": "row.item_code"
+                  },
+                  "::",
+                  {
+                    "get": "row.warehouse"
+                  }
+                ]
+              },
+              "values": {
+                "name": {
+                  "concat": [
+                    {
+                      "get": "row.item_code"
+                    },
+                    "::",
+                    {
+                      "get": "row.warehouse"
+                    }
+                  ]
+                },
+                "item_code": {
+                  "get": "row.item_code"
+                },
+                "warehouse": {
+                  "get": "row.warehouse"
+                },
+                "actual_qty": {
+                  "get": "new_qty"
+                },
+                "valuation_rate": {
+                  "round": {
+                    "value": {
+                      "get": "new_rate"
+                    },
+                    "precision": 2
+                  }
+                },
+                "stock_value": {
+                  "get": "new_value"
+                }
+              }
+            },
+            {
+              "op": "db_insert",
+              "doctype": "Stock Ledger Entry",
+              "values": {
+                "company": {
+                  "get": "doc.company"
+                },
+                "posting_date": {
+                  "get": "doc.posting_date"
+                },
+                "item_code": {
+                  "get": "row.item_code"
+                },
+                "warehouse": {
+                  "get": "row.warehouse"
+                },
+                "voucher_type": "Purchase Invoice",
+                "voucher_no": {
+                  "get": "doc.name"
+                },
+                "actual_qty": {
+                  "get": "row.qty"
+                },
+                "qty_after_transaction": {
+                  "get": "new_qty"
+                },
+                "valuation_rate": {
+                  "round": {
+                    "value": {
+                      "get": "new_rate"
+                    },
+                    "precision": 2
+                  }
+                },
+                "stock_value_difference": {
+                  "get": "line_value"
+                },
+                "remarks": "Purchase receipt"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

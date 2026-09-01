@@ -1,0 +1,431 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "db_get",
+      "doctype": "POS Opening Entry",
+      "name": {
+        "get": "doc.pos_opening_entry"
+      },
+      "as": "opening"
+    },
+    {
+      "op": "assert",
+      "test": {
+        "eq": [
+          {
+            "field": {
+              "from": {
+                "get": "opening"
+              },
+              "name": "status"
+            }
+          },
+          "Open"
+        ]
+      },
+      "message": "Cannot cancel a POS Invoice after its POS shift is closed. Cancel the POS Closing Entry first."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "close": [
+          {
+            "get": "doc.outstanding_amount"
+          },
+          {
+            "round": {
+              "value": {
+                "sub": [
+                  {
+                    "get": "doc.grand_total"
+                  },
+                  {
+                    "get": "doc.paid_amount"
+                  }
+                ]
+              },
+              "precision": 2
+            }
+          },
+          0.005
+        ]
+      },
+      "message": "Cannot cancel POS Invoice after a later Payment Entry has been allocated. Cancel the payment first."
+    },
+    {
+      "op": "db_list",
+      "doctype": "Stock Posting Snapshot",
+      "filters": [
+        [
+          "voucher_type",
+          "=",
+          "POS Invoice"
+        ],
+        [
+          "voucher_no",
+          "=",
+          {
+            "get": "doc.name"
+          }
+        ]
+      ],
+      "order_by": "sequence_no desc",
+      "limit": 500,
+      "as": "snapshot_refs",
+      "fields": [
+        "name"
+      ]
+    },
+    {
+      "op": "for_each",
+      "items": {
+        "get": "snapshot_refs"
+      },
+      "as": "snapshot_ref",
+      "steps": [
+        {
+          "op": "db_get",
+          "doctype": "Stock Posting Snapshot",
+          "name": {
+            "get": "snapshot_ref.name"
+          },
+          "as": "snap"
+        },
+        {
+          "op": "db_get",
+          "doctype": "Bin",
+          "filters": [
+            [
+              "item_code",
+              "=",
+              {
+                "get": "snap.item_code"
+              }
+            ],
+            [
+              "warehouse",
+              "=",
+              {
+                "get": "snap.warehouse"
+              }
+            ]
+          ],
+          "as": "current_bin"
+        },
+        {
+          "op": "assert",
+          "test": {
+            "close": [
+              {
+                "coalesce": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "current_bin"
+                      },
+                      "name": "actual_qty"
+                    }
+                  },
+                  0
+                ]
+              },
+              {
+                "get": "snap.expected_after_qty"
+              },
+              0.0005
+            ]
+          },
+          "message": "Cannot cancel this stock transaction because a later stock movement changed {{ snap.item_code }} in {{ snap.warehouse }}. Cancel later stock transactions first."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "close": [
+              {
+                "coalesce": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "current_bin"
+                      },
+                      "name": "stock_value"
+                    }
+                  },
+                  0
+                ]
+              },
+              {
+                "get": "snap.expected_after_stock_value"
+              },
+              0.01
+            ]
+          },
+          "message": "Cannot cancel this stock transaction because stock valuation changed after posting for {{ snap.item_code }} in {{ snap.warehouse }}."
+        },
+        {
+          "op": "db_upsert",
+          "doctype": "Bin",
+          "name": {
+            "concat": [
+              {
+                "get": "snap.item_code"
+              },
+              "::",
+              {
+                "get": "snap.warehouse"
+              }
+            ]
+          },
+          "values": {
+            "name": {
+              "concat": [
+                {
+                  "get": "snap.item_code"
+                },
+                "::",
+                {
+                  "get": "snap.warehouse"
+                }
+              ]
+            },
+            "item_code": {
+              "get": "snap.item_code"
+            },
+            "warehouse": {
+              "get": "snap.warehouse"
+            },
+            "actual_qty": {
+              "get": "snap.previous_qty"
+            },
+            "valuation_rate": {
+              "get": "snap.previous_valuation_rate"
+            },
+            "stock_value": {
+              "get": "snap.previous_stock_value"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "op": "db_delete",
+      "doctype": "Stock Ledger Entry",
+      "filters": [
+        [
+          "voucher_type",
+          "=",
+          "POS Invoice"
+        ],
+        [
+          "voucher_no",
+          "=",
+          {
+            "get": "doc.name"
+          }
+        ]
+      ]
+    },
+    {
+      "op": "db_delete",
+      "doctype": "Stock Posting Snapshot",
+      "filters": [
+        [
+          "voucher_type",
+          "=",
+          "POS Invoice"
+        ],
+        [
+          "voucher_no",
+          "=",
+          {
+            "get": "doc.name"
+          }
+        ]
+      ]
+    },
+    {
+      "op": "db_delete",
+      "doctype": "GL Entry",
+      "filters": [
+        [
+          "voucher_type",
+          "=",
+          "POS Invoice"
+        ],
+        [
+          "voucher_no",
+          "=",
+          {
+            "get": "doc.name"
+          }
+        ]
+      ]
+    },
+    {
+      "op": "db_delete",
+      "doctype": "Payment Ledger Entry",
+      "filters": [
+        [
+          "voucher_type",
+          "=",
+          "POS Invoice"
+        ],
+        [
+          "voucher_no",
+          "=",
+          {
+            "get": "doc.name"
+          }
+        ]
+      ]
+    },
+    {
+      "op": "if",
+      "test": {
+        "eq": [
+          {
+            "coalesce": [
+              {
+                "get": "doc.is_return"
+              },
+              0
+            ]
+          },
+          1
+        ]
+      },
+      "then": [
+        {
+          "op": "db_get",
+          "doctype": "POS Invoice",
+          "name": {
+            "get": "doc.return_against"
+          },
+          "as": "original_invoice"
+        },
+        {
+          "op": "for_each",
+          "items": {
+            "get": "doc.items"
+          },
+          "as": "returned_row",
+          "steps": [
+            {
+              "op": "db_list",
+              "doctype": "POS Invoice Item",
+              "fields": [
+                "name",
+                "returned_qty"
+              ],
+              "filters": [
+                [
+                  "parent",
+                  "=",
+                  {
+                    "get": "doc.return_against"
+                  }
+                ],
+                [
+                  "item_code",
+                  "=",
+                  {
+                    "get": "returned_row.item_code"
+                  }
+                ]
+              ],
+              "limit": 1,
+              "as": "original_lines"
+            },
+            {
+              "op": "assert",
+              "test": {
+                "eq": [
+                  {
+                    "len": {
+                      "get": "original_lines"
+                    }
+                  },
+                  1
+                ]
+              },
+              "message": "Original POS Invoice item is missing during return cancellation."
+            },
+            {
+              "op": "db_update",
+              "doctype": "POS Invoice Item",
+              "name": {
+                "get": "original_lines.0.name"
+              },
+              "values": {
+                "returned_qty": {
+                  "max": [
+                    0,
+                    {
+                      "sub": [
+                        {
+                          "coalesce": [
+                            {
+                              "get": "original_lines.0.returned_qty"
+                            },
+                            0
+                          ]
+                        },
+                        {
+                          "get": "returned_row.qty"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "op": "db_update",
+          "doctype": "POS Invoice",
+          "name": {
+            "get": "doc.return_against"
+          },
+          "metadata_tag": "refund_accumulator_reverse",
+          "values": {
+            "refunded_amount": {
+              "round": {
+                "value": {
+                  "max": [
+                    0,
+                    {
+                      "sub": [
+                        {
+                          "coalesce": [
+                            {
+                              "field": {
+                                "from": {
+                                  "get": "original_invoice"
+                                },
+                                "name": "refunded_amount"
+                              }
+                            },
+                            0
+                          ]
+                        },
+                        {
+                          "abs": {
+                            "get": "doc.paid_amount"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "precision": 2
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

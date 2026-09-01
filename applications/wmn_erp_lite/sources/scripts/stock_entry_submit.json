@@ -1,0 +1,1237 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "for_each",
+      "items": {
+        "get": "doc.items"
+      },
+      "as": "row",
+      "index_as": "line_index",
+      "steps": [
+        {
+          "op": "if",
+          "test": {
+            "eq": [
+              {
+                "get": "doc.stock_entry_type"
+              },
+              "Material Receipt"
+            ]
+          },
+          "then": [
+            {
+              "op": "db_get",
+              "doctype": "Bin",
+              "filters": [
+                [
+                  "item_code",
+                  "=",
+                  {
+                    "get": "row.item_code"
+                  }
+                ],
+                [
+                  "warehouse",
+                  "=",
+                  {
+                    "get": "row.target_warehouse"
+                  }
+                ]
+              ],
+              "as": "bin"
+            },
+            {
+              "op": "let",
+              "name": "old_qty",
+              "value": {
+                "coalesce": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "bin"
+                      },
+                      "name": "actual_qty"
+                    }
+                  },
+                  0
+                ]
+              }
+            },
+            {
+              "op": "let",
+              "name": "old_rate",
+              "value": {
+                "coalesce": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "bin"
+                      },
+                      "name": "valuation_rate"
+                    }
+                  },
+                  0
+                ]
+              }
+            },
+            {
+              "op": "let",
+              "name": "old_value",
+              "value": {
+                "coalesce": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "bin"
+                      },
+                      "name": "stock_value"
+                    }
+                  },
+                  0
+                ]
+              }
+            },
+            {
+              "op": "let",
+              "name": "new_qty",
+              "value": {
+                "add": [
+                  {
+                    "get": "old_qty"
+                  },
+                  {
+                    "get": "row.qty"
+                  }
+                ]
+              }
+            },
+            {
+              "op": "let",
+              "name": "new_value",
+              "value": {
+                "round": {
+                  "value": {
+                    "add": [
+                      {
+                        "get": "old_value"
+                      },
+                      {
+                        "get": "row.amount"
+                      }
+                    ]
+                  },
+                  "precision": 2
+                }
+              }
+            },
+            {
+              "op": "let",
+              "name": "new_rate",
+              "value": {
+                "if": {
+                  "test": {
+                    "gt": [
+                      {
+                        "get": "new_qty"
+                      },
+                      0
+                    ]
+                  },
+                  "then": {
+                    "div": [
+                      {
+                        "get": "new_value"
+                      },
+                      {
+                        "get": "new_qty"
+                      }
+                    ]
+                  },
+                  "else": {
+                    "get": "row.basic_rate"
+                  }
+                }
+              }
+            },
+            {
+              "op": "db_insert",
+              "doctype": "Stock Posting Snapshot",
+              "values": {
+                "voucher_type": "Stock Entry",
+                "voucher_no": {
+                  "get": "doc.name"
+                },
+                "sequence_no": {
+                  "get": "line_index"
+                },
+                "item_code": {
+                  "get": "row.item_code"
+                },
+                "warehouse": {
+                  "get": "row.target_warehouse"
+                },
+                "previous_qty": {
+                  "get": "old_qty"
+                },
+                "previous_valuation_rate": {
+                  "get": "old_rate"
+                },
+                "previous_stock_value": {
+                  "get": "old_value"
+                },
+                "expected_after_qty": {
+                  "get": "new_qty"
+                },
+                "expected_after_valuation_rate": {
+                  "round": {
+                    "value": {
+                      "get": "new_rate"
+                    },
+                    "precision": 2
+                  }
+                },
+                "expected_after_stock_value": {
+                  "get": "new_value"
+                }
+              }
+            },
+            {
+              "op": "db_upsert",
+              "doctype": "Bin",
+              "name": {
+                "concat": [
+                  {
+                    "get": "row.item_code"
+                  },
+                  "::",
+                  {
+                    "get": "row.target_warehouse"
+                  }
+                ]
+              },
+              "values": {
+                "name": {
+                  "concat": [
+                    {
+                      "get": "row.item_code"
+                    },
+                    "::",
+                    {
+                      "get": "row.target_warehouse"
+                    }
+                  ]
+                },
+                "item_code": {
+                  "get": "row.item_code"
+                },
+                "warehouse": {
+                  "get": "row.target_warehouse"
+                },
+                "actual_qty": {
+                  "get": "new_qty"
+                },
+                "valuation_rate": {
+                  "round": {
+                    "value": {
+                      "get": "new_rate"
+                    },
+                    "precision": 2
+                  }
+                },
+                "stock_value": {
+                  "get": "new_value"
+                }
+              }
+            },
+            {
+              "op": "db_insert",
+              "doctype": "Stock Ledger Entry",
+              "values": {
+                "company": {
+                  "get": "doc.company"
+                },
+                "posting_date": {
+                  "get": "doc.posting_date"
+                },
+                "item_code": {
+                  "get": "row.item_code"
+                },
+                "warehouse": {
+                  "get": "row.target_warehouse"
+                },
+                "voucher_type": "Stock Entry",
+                "voucher_no": {
+                  "get": "doc.name"
+                },
+                "actual_qty": {
+                  "get": "row.qty"
+                },
+                "qty_after_transaction": {
+                  "get": "new_qty"
+                },
+                "valuation_rate": {
+                  "round": {
+                    "value": {
+                      "get": "new_rate"
+                    },
+                    "precision": 2
+                  }
+                },
+                "stock_value_difference": {
+                  "get": "row.amount"
+                },
+                "remarks": "Material Receipt"
+              }
+            },
+            {
+              "op": "if",
+              "test": {
+                "gt": [
+                  {
+                    "get": "row.amount"
+                  },
+                  0
+                ]
+              },
+              "then": [
+                {
+                  "op": "db_insert",
+                  "doctype": "GL Entry",
+                  "values": {
+                    "company": {
+                      "get": "doc.company"
+                    },
+                    "posting_date": {
+                      "get": "doc.posting_date"
+                    },
+                    "account": {
+                      "get": "doc.stock_account"
+                    },
+                    "voucher_type": "Stock Entry",
+                    "voucher_no": {
+                      "get": "doc.name"
+                    },
+                    "debit": {
+                      "get": "row.amount"
+                    },
+                    "credit": 0,
+                    "remarks": "Material Receipt"
+                  }
+                },
+                {
+                  "op": "db_insert",
+                  "doctype": "GL Entry",
+                  "values": {
+                    "company": {
+                      "get": "doc.company"
+                    },
+                    "posting_date": {
+                      "get": "doc.posting_date"
+                    },
+                    "account": {
+                      "get": "doc.adjustment_account"
+                    },
+                    "voucher_type": "Stock Entry",
+                    "voucher_no": {
+                      "get": "doc.name"
+                    },
+                    "debit": 0,
+                    "credit": {
+                      "get": "row.amount"
+                    },
+                    "remarks": "Material Receipt"
+                  }
+                }
+              ]
+            }
+          ],
+          "else": [
+            {
+              "op": "if",
+              "test": {
+                "eq": [
+                  {
+                    "get": "doc.stock_entry_type"
+                  },
+                  "Material Issue"
+                ]
+              },
+              "then": [
+                {
+                  "op": "db_get",
+                  "doctype": "Bin",
+                  "filters": [
+                    [
+                      "item_code",
+                      "=",
+                      {
+                        "get": "row.item_code"
+                      }
+                    ],
+                    [
+                      "warehouse",
+                      "=",
+                      {
+                        "get": "row.source_warehouse"
+                      }
+                    ]
+                  ],
+                  "as": "bin"
+                },
+                {
+                  "op": "let",
+                  "name": "old_qty",
+                  "value": {
+                    "coalesce": [
+                      {
+                        "field": {
+                          "from": {
+                            "get": "bin"
+                          },
+                          "name": "actual_qty"
+                        }
+                      },
+                      0
+                    ]
+                  }
+                },
+                {
+                  "op": "let",
+                  "name": "rate",
+                  "value": {
+                    "coalesce": [
+                      {
+                        "field": {
+                          "from": {
+                            "get": "bin"
+                          },
+                          "name": "valuation_rate"
+                        }
+                      },
+                      0
+                    ]
+                  }
+                },
+                {
+                  "op": "let",
+                  "name": "old_value",
+                  "value": {
+                    "coalesce": [
+                      {
+                        "field": {
+                          "from": {
+                            "get": "bin"
+                          },
+                          "name": "stock_value"
+                        }
+                      },
+                      0
+                    ]
+                  }
+                },
+                {
+                  "op": "assert",
+                  "test": {
+                    "gte": [
+                      {
+                        "get": "old_qty"
+                      },
+                      {
+                        "get": "row.qty"
+                      }
+                    ]
+                  },
+                  "message": "Insufficient stock for {{ row.item_code }} in {{ row.source_warehouse }}."
+                },
+                {
+                  "op": "let",
+                  "name": "cost",
+                  "value": {
+                    "round": {
+                      "value": {
+                        "mul": [
+                          {
+                            "get": "row.qty"
+                          },
+                          {
+                            "get": "rate"
+                          }
+                        ]
+                      },
+                      "precision": 2
+                    }
+                  }
+                },
+                {
+                  "op": "let",
+                  "name": "new_qty",
+                  "value": {
+                    "sub": [
+                      {
+                        "get": "old_qty"
+                      },
+                      {
+                        "get": "row.qty"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "op": "let",
+                  "name": "new_value",
+                  "value": {
+                    "round": {
+                      "value": {
+                        "sub": [
+                          {
+                            "get": "old_value"
+                          },
+                          {
+                            "get": "cost"
+                          }
+                        ]
+                      },
+                      "precision": 2
+                    }
+                  }
+                },
+                {
+                  "op": "db_insert",
+                  "doctype": "Stock Posting Snapshot",
+                  "values": {
+                    "voucher_type": "Stock Entry",
+                    "voucher_no": {
+                      "get": "doc.name"
+                    },
+                    "sequence_no": {
+                      "get": "line_index"
+                    },
+                    "item_code": {
+                      "get": "row.item_code"
+                    },
+                    "warehouse": {
+                      "get": "row.source_warehouse"
+                    },
+                    "previous_qty": {
+                      "get": "old_qty"
+                    },
+                    "previous_valuation_rate": {
+                      "get": "rate"
+                    },
+                    "previous_stock_value": {
+                      "get": "old_value"
+                    },
+                    "expected_after_qty": {
+                      "get": "new_qty"
+                    },
+                    "expected_after_valuation_rate": {
+                      "get": "rate"
+                    },
+                    "expected_after_stock_value": {
+                      "get": "new_value"
+                    }
+                  }
+                },
+                {
+                  "op": "db_upsert",
+                  "doctype": "Bin",
+                  "name": {
+                    "concat": [
+                      {
+                        "get": "row.item_code"
+                      },
+                      "::",
+                      {
+                        "get": "row.source_warehouse"
+                      }
+                    ]
+                  },
+                  "values": {
+                    "name": {
+                      "concat": [
+                        {
+                          "get": "row.item_code"
+                        },
+                        "::",
+                        {
+                          "get": "row.source_warehouse"
+                        }
+                      ]
+                    },
+                    "item_code": {
+                      "get": "row.item_code"
+                    },
+                    "warehouse": {
+                      "get": "row.source_warehouse"
+                    },
+                    "actual_qty": {
+                      "get": "new_qty"
+                    },
+                    "valuation_rate": {
+                      "get": "rate"
+                    },
+                    "stock_value": {
+                      "get": "new_value"
+                    }
+                  }
+                },
+                {
+                  "op": "db_insert",
+                  "doctype": "Stock Ledger Entry",
+                  "values": {
+                    "company": {
+                      "get": "doc.company"
+                    },
+                    "posting_date": {
+                      "get": "doc.posting_date"
+                    },
+                    "item_code": {
+                      "get": "row.item_code"
+                    },
+                    "warehouse": {
+                      "get": "row.source_warehouse"
+                    },
+                    "voucher_type": "Stock Entry",
+                    "voucher_no": {
+                      "get": "doc.name"
+                    },
+                    "actual_qty": {
+                      "mul": [
+                        {
+                          "get": "row.qty"
+                        },
+                        -1
+                      ]
+                    },
+                    "qty_after_transaction": {
+                      "get": "new_qty"
+                    },
+                    "valuation_rate": {
+                      "get": "rate"
+                    },
+                    "stock_value_difference": {
+                      "mul": [
+                        {
+                          "get": "cost"
+                        },
+                        -1
+                      ]
+                    },
+                    "remarks": "Material Issue"
+                  }
+                },
+                {
+                  "op": "if",
+                  "test": {
+                    "gt": [
+                      {
+                        "get": "cost"
+                      },
+                      0
+                    ]
+                  },
+                  "then": [
+                    {
+                      "op": "db_insert",
+                      "doctype": "GL Entry",
+                      "values": {
+                        "company": {
+                          "get": "doc.company"
+                        },
+                        "posting_date": {
+                          "get": "doc.posting_date"
+                        },
+                        "account": {
+                          "get": "doc.adjustment_account"
+                        },
+                        "voucher_type": "Stock Entry",
+                        "voucher_no": {
+                          "get": "doc.name"
+                        },
+                        "debit": {
+                          "get": "cost"
+                        },
+                        "credit": 0,
+                        "remarks": "Material Issue"
+                      }
+                    },
+                    {
+                      "op": "db_insert",
+                      "doctype": "GL Entry",
+                      "values": {
+                        "company": {
+                          "get": "doc.company"
+                        },
+                        "posting_date": {
+                          "get": "doc.posting_date"
+                        },
+                        "account": {
+                          "get": "doc.stock_account"
+                        },
+                        "voucher_type": "Stock Entry",
+                        "voucher_no": {
+                          "get": "doc.name"
+                        },
+                        "debit": 0,
+                        "credit": {
+                          "get": "cost"
+                        },
+                        "remarks": "Material Issue"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "else": [
+                {
+                  "op": "db_get",
+                  "doctype": "Bin",
+                  "filters": [
+                    [
+                      "item_code",
+                      "=",
+                      {
+                        "get": "row.item_code"
+                      }
+                    ],
+                    [
+                      "warehouse",
+                      "=",
+                      {
+                        "get": "row.source_warehouse"
+                      }
+                    ]
+                  ],
+                  "as": "src"
+                },
+                {
+                  "op": "let",
+                  "name": "src_qty",
+                  "value": {
+                    "coalesce": [
+                      {
+                        "field": {
+                          "from": {
+                            "get": "src"
+                          },
+                          "name": "actual_qty"
+                        }
+                      },
+                      0
+                    ]
+                  }
+                },
+                {
+                  "op": "let",
+                  "name": "rate",
+                  "value": {
+                    "coalesce": [
+                      {
+                        "field": {
+                          "from": {
+                            "get": "src"
+                          },
+                          "name": "valuation_rate"
+                        }
+                      },
+                      0
+                    ]
+                  }
+                },
+                {
+                  "op": "let",
+                  "name": "src_value",
+                  "value": {
+                    "coalesce": [
+                      {
+                        "field": {
+                          "from": {
+                            "get": "src"
+                          },
+                          "name": "stock_value"
+                        }
+                      },
+                      0
+                    ]
+                  }
+                },
+                {
+                  "op": "assert",
+                  "test": {
+                    "gte": [
+                      {
+                        "get": "src_qty"
+                      },
+                      {
+                        "get": "row.qty"
+                      }
+                    ]
+                  },
+                  "message": "Insufficient stock for {{ row.item_code }} in {{ row.source_warehouse }}."
+                },
+                {
+                  "op": "let",
+                  "name": "cost",
+                  "value": {
+                    "round": {
+                      "value": {
+                        "mul": [
+                          {
+                            "get": "row.qty"
+                          },
+                          {
+                            "get": "rate"
+                          }
+                        ]
+                      },
+                      "precision": 2
+                    }
+                  }
+                },
+                {
+                  "op": "let",
+                  "name": "src_new_qty",
+                  "value": {
+                    "sub": [
+                      {
+                        "get": "src_qty"
+                      },
+                      {
+                        "get": "row.qty"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "op": "let",
+                  "name": "src_new_value",
+                  "value": {
+                    "round": {
+                      "value": {
+                        "sub": [
+                          {
+                            "get": "src_value"
+                          },
+                          {
+                            "get": "cost"
+                          }
+                        ]
+                      },
+                      "precision": 2
+                    }
+                  }
+                },
+                {
+                  "op": "db_get",
+                  "doctype": "Bin",
+                  "filters": [
+                    [
+                      "item_code",
+                      "=",
+                      {
+                        "get": "row.item_code"
+                      }
+                    ],
+                    [
+                      "warehouse",
+                      "=",
+                      {
+                        "get": "row.target_warehouse"
+                      }
+                    ]
+                  ],
+                  "as": "dst"
+                },
+                {
+                  "op": "let",
+                  "name": "dst_qty",
+                  "value": {
+                    "coalesce": [
+                      {
+                        "field": {
+                          "from": {
+                            "get": "dst"
+                          },
+                          "name": "actual_qty"
+                        }
+                      },
+                      0
+                    ]
+                  }
+                },
+                {
+                  "op": "let",
+                  "name": "dst_rate",
+                  "value": {
+                    "coalesce": [
+                      {
+                        "field": {
+                          "from": {
+                            "get": "dst"
+                          },
+                          "name": "valuation_rate"
+                        }
+                      },
+                      0
+                    ]
+                  }
+                },
+                {
+                  "op": "let",
+                  "name": "dst_value",
+                  "value": {
+                    "coalesce": [
+                      {
+                        "field": {
+                          "from": {
+                            "get": "dst"
+                          },
+                          "name": "stock_value"
+                        }
+                      },
+                      0
+                    ]
+                  }
+                },
+                {
+                  "op": "let",
+                  "name": "dst_new_qty",
+                  "value": {
+                    "add": [
+                      {
+                        "get": "dst_qty"
+                      },
+                      {
+                        "get": "row.qty"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "op": "let",
+                  "name": "dst_new_value",
+                  "value": {
+                    "round": {
+                      "value": {
+                        "add": [
+                          {
+                            "get": "dst_value"
+                          },
+                          {
+                            "get": "cost"
+                          }
+                        ]
+                      },
+                      "precision": 2
+                    }
+                  }
+                },
+                {
+                  "op": "let",
+                  "name": "dst_new_rate",
+                  "value": {
+                    "if": {
+                      "test": {
+                        "gt": [
+                          {
+                            "get": "dst_new_qty"
+                          },
+                          0
+                        ]
+                      },
+                      "then": {
+                        "div": [
+                          {
+                            "get": "dst_new_value"
+                          },
+                          {
+                            "get": "dst_new_qty"
+                          }
+                        ]
+                      },
+                      "else": {
+                        "get": "rate"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "db_insert",
+                  "doctype": "Stock Posting Snapshot",
+                  "values": {
+                    "voucher_type": "Stock Entry",
+                    "voucher_no": {
+                      "get": "doc.name"
+                    },
+                    "sequence_no": {
+                      "mul": [
+                        {
+                          "get": "line_index"
+                        },
+                        2
+                      ]
+                    },
+                    "item_code": {
+                      "get": "row.item_code"
+                    },
+                    "warehouse": {
+                      "get": "row.source_warehouse"
+                    },
+                    "previous_qty": {
+                      "get": "src_qty"
+                    },
+                    "previous_valuation_rate": {
+                      "get": "rate"
+                    },
+                    "previous_stock_value": {
+                      "get": "src_value"
+                    },
+                    "expected_after_qty": {
+                      "get": "src_new_qty"
+                    },
+                    "expected_after_valuation_rate": {
+                      "get": "rate"
+                    },
+                    "expected_after_stock_value": {
+                      "get": "src_new_value"
+                    }
+                  }
+                },
+                {
+                  "op": "db_upsert",
+                  "doctype": "Bin",
+                  "name": {
+                    "concat": [
+                      {
+                        "get": "row.item_code"
+                      },
+                      "::",
+                      {
+                        "get": "row.source_warehouse"
+                      }
+                    ]
+                  },
+                  "values": {
+                    "name": {
+                      "concat": [
+                        {
+                          "get": "row.item_code"
+                        },
+                        "::",
+                        {
+                          "get": "row.source_warehouse"
+                        }
+                      ]
+                    },
+                    "item_code": {
+                      "get": "row.item_code"
+                    },
+                    "warehouse": {
+                      "get": "row.source_warehouse"
+                    },
+                    "actual_qty": {
+                      "get": "src_new_qty"
+                    },
+                    "valuation_rate": {
+                      "get": "rate"
+                    },
+                    "stock_value": {
+                      "get": "src_new_value"
+                    }
+                  }
+                },
+                {
+                  "op": "db_insert",
+                  "doctype": "Stock Posting Snapshot",
+                  "values": {
+                    "voucher_type": "Stock Entry",
+                    "voucher_no": {
+                      "get": "doc.name"
+                    },
+                    "sequence_no": {
+                      "add": [
+                        {
+                          "mul": [
+                            {
+                              "get": "line_index"
+                            },
+                            2
+                          ]
+                        },
+                        1
+                      ]
+                    },
+                    "item_code": {
+                      "get": "row.item_code"
+                    },
+                    "warehouse": {
+                      "get": "row.target_warehouse"
+                    },
+                    "previous_qty": {
+                      "get": "dst_qty"
+                    },
+                    "previous_valuation_rate": {
+                      "get": "dst_rate"
+                    },
+                    "previous_stock_value": {
+                      "get": "dst_value"
+                    },
+                    "expected_after_qty": {
+                      "get": "dst_new_qty"
+                    },
+                    "expected_after_valuation_rate": {
+                      "round": {
+                        "value": {
+                          "get": "dst_new_rate"
+                        },
+                        "precision": 2
+                      }
+                    },
+                    "expected_after_stock_value": {
+                      "get": "dst_new_value"
+                    }
+                  }
+                },
+                {
+                  "op": "db_upsert",
+                  "doctype": "Bin",
+                  "name": {
+                    "concat": [
+                      {
+                        "get": "row.item_code"
+                      },
+                      "::",
+                      {
+                        "get": "row.target_warehouse"
+                      }
+                    ]
+                  },
+                  "values": {
+                    "name": {
+                      "concat": [
+                        {
+                          "get": "row.item_code"
+                        },
+                        "::",
+                        {
+                          "get": "row.target_warehouse"
+                        }
+                      ]
+                    },
+                    "item_code": {
+                      "get": "row.item_code"
+                    },
+                    "warehouse": {
+                      "get": "row.target_warehouse"
+                    },
+                    "actual_qty": {
+                      "get": "dst_new_qty"
+                    },
+                    "valuation_rate": {
+                      "round": {
+                        "value": {
+                          "get": "dst_new_rate"
+                        },
+                        "precision": 2
+                      }
+                    },
+                    "stock_value": {
+                      "get": "dst_new_value"
+                    }
+                  }
+                },
+                {
+                  "op": "db_insert",
+                  "doctype": "Stock Ledger Entry",
+                  "values": {
+                    "company": {
+                      "get": "doc.company"
+                    },
+                    "posting_date": {
+                      "get": "doc.posting_date"
+                    },
+                    "item_code": {
+                      "get": "row.item_code"
+                    },
+                    "warehouse": {
+                      "get": "row.source_warehouse"
+                    },
+                    "voucher_type": "Stock Entry",
+                    "voucher_no": {
+                      "get": "doc.name"
+                    },
+                    "actual_qty": {
+                      "mul": [
+                        {
+                          "get": "row.qty"
+                        },
+                        -1
+                      ]
+                    },
+                    "qty_after_transaction": {
+                      "get": "src_new_qty"
+                    },
+                    "valuation_rate": {
+                      "get": "rate"
+                    },
+                    "stock_value_difference": {
+                      "mul": [
+                        {
+                          "get": "cost"
+                        },
+                        -1
+                      ]
+                    },
+                    "remarks": "Material Transfer Out"
+                  }
+                },
+                {
+                  "op": "db_insert",
+                  "doctype": "Stock Ledger Entry",
+                  "values": {
+                    "company": {
+                      "get": "doc.company"
+                    },
+                    "posting_date": {
+                      "get": "doc.posting_date"
+                    },
+                    "item_code": {
+                      "get": "row.item_code"
+                    },
+                    "warehouse": {
+                      "get": "row.target_warehouse"
+                    },
+                    "voucher_type": "Stock Entry",
+                    "voucher_no": {
+                      "get": "doc.name"
+                    },
+                    "actual_qty": {
+                      "get": "row.qty"
+                    },
+                    "qty_after_transaction": {
+                      "get": "dst_new_qty"
+                    },
+                    "valuation_rate": {
+                      "round": {
+                        "value": {
+                          "get": "dst_new_rate"
+                        },
+                        "precision": 2
+                      }
+                    },
+                    "stock_value_difference": {
+                      "get": "cost"
+                    },
+                    "remarks": "Material Transfer In"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

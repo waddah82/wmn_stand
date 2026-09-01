@@ -1,0 +1,1 @@
+SELECT voucher_type,COUNT(DISTINCT voucher_no) AS voucher_count,SUM(actual_qty) AS qty_movement,SUM(stock_value_difference) AS value_movement FROM "tabStock Ledger Entry" WHERE (%(company)s='' OR company=%(company)s) AND (%(from_date)s='' OR posting_date>=%(from_date)s) AND (%(to_date)s='' OR posting_date<=%(to_date)s) GROUP BY voucher_type ORDER BY voucher_type

@@ -1,0 +1,381 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "for_each",
+      "items": {
+        "get": "doc.items"
+      },
+      "as": "row",
+      "index_as": "line_index",
+      "steps": [
+        {
+          "op": "db_get",
+          "doctype": "Bin",
+          "filters": [
+            [
+              "item_code",
+              "=",
+              {
+                "get": "row.item_code"
+              }
+            ],
+            [
+              "warehouse",
+              "=",
+              {
+                "get": "row.warehouse"
+              }
+            ]
+          ],
+          "as": "bin"
+        },
+        {
+          "op": "let",
+          "name": "old_qty",
+          "value": {
+            "coalesce": [
+              {
+                "field": {
+                  "from": {
+                    "get": "bin"
+                  },
+                  "name": "actual_qty"
+                }
+              },
+              0
+            ]
+          }
+        },
+        {
+          "op": "let",
+          "name": "old_rate",
+          "value": {
+            "coalesce": [
+              {
+                "field": {
+                  "from": {
+                    "get": "bin"
+                  },
+                  "name": "valuation_rate"
+                }
+              },
+              0
+            ]
+          }
+        },
+        {
+          "op": "let",
+          "name": "old_value",
+          "value": {
+            "coalesce": [
+              {
+                "field": {
+                  "from": {
+                    "get": "bin"
+                  },
+                  "name": "stock_value"
+                }
+              },
+              0
+            ]
+          }
+        },
+        {
+          "op": "let",
+          "name": "new_value",
+          "value": {
+            "round": {
+              "value": {
+                "mul": [
+                  {
+                    "get": "row.quantity"
+                  },
+                  {
+                    "get": "row.valuation_rate"
+                  }
+                ]
+              },
+              "precision": 2
+            }
+          }
+        },
+        {
+          "op": "let",
+          "name": "qty_diff",
+          "value": {
+            "sub": [
+              {
+                "get": "row.quantity"
+              },
+              {
+                "get": "old_qty"
+              }
+            ]
+          }
+        },
+        {
+          "op": "let",
+          "name": "value_diff",
+          "value": {
+            "round": {
+              "value": {
+                "sub": [
+                  {
+                    "get": "new_value"
+                  },
+                  {
+                    "get": "old_value"
+                  }
+                ]
+              },
+              "precision": 2
+            }
+          }
+        },
+        {
+          "op": "db_insert",
+          "doctype": "Stock Posting Snapshot",
+          "values": {
+            "voucher_type": "Stock Reconciliation",
+            "voucher_no": {
+              "get": "doc.name"
+            },
+            "sequence_no": {
+              "get": "line_index"
+            },
+            "item_code": {
+              "get": "row.item_code"
+            },
+            "warehouse": {
+              "get": "row.warehouse"
+            },
+            "previous_qty": {
+              "get": "old_qty"
+            },
+            "previous_valuation_rate": {
+              "get": "old_rate"
+            },
+            "previous_stock_value": {
+              "get": "old_value"
+            },
+            "expected_after_qty": {
+              "get": "row.quantity"
+            },
+            "expected_after_valuation_rate": {
+              "get": "row.valuation_rate"
+            },
+            "expected_after_stock_value": {
+              "get": "new_value"
+            }
+          }
+        },
+        {
+          "op": "db_upsert",
+          "doctype": "Bin",
+          "name": {
+            "concat": [
+              {
+                "get": "row.item_code"
+              },
+              "::",
+              {
+                "get": "row.warehouse"
+              }
+            ]
+          },
+          "values": {
+            "name": {
+              "concat": [
+                {
+                  "get": "row.item_code"
+                },
+                "::",
+                {
+                  "get": "row.warehouse"
+                }
+              ]
+            },
+            "item_code": {
+              "get": "row.item_code"
+            },
+            "warehouse": {
+              "get": "row.warehouse"
+            },
+            "actual_qty": {
+              "get": "row.quantity"
+            },
+            "valuation_rate": {
+              "get": "row.valuation_rate"
+            },
+            "stock_value": {
+              "get": "new_value"
+            }
+          }
+        },
+        {
+          "op": "db_insert",
+          "doctype": "Stock Ledger Entry",
+          "values": {
+            "company": {
+              "get": "doc.company"
+            },
+            "posting_date": {
+              "get": "doc.posting_date"
+            },
+            "item_code": {
+              "get": "row.item_code"
+            },
+            "warehouse": {
+              "get": "row.warehouse"
+            },
+            "voucher_type": "Stock Reconciliation",
+            "voucher_no": {
+              "get": "doc.name"
+            },
+            "actual_qty": {
+              "get": "qty_diff"
+            },
+            "qty_after_transaction": {
+              "get": "row.quantity"
+            },
+            "valuation_rate": {
+              "get": "row.valuation_rate"
+            },
+            "stock_value_difference": {
+              "get": "value_diff"
+            },
+            "remarks": "Stock Reconciliation"
+          }
+        },
+        {
+          "op": "if",
+          "test": {
+            "gt": [
+              {
+                "get": "value_diff"
+              },
+              0
+            ]
+          },
+          "then": [
+            {
+              "op": "db_insert",
+              "doctype": "GL Entry",
+              "values": {
+                "company": {
+                  "get": "doc.company"
+                },
+                "posting_date": {
+                  "get": "doc.posting_date"
+                },
+                "account": {
+                  "get": "doc.stock_account"
+                },
+                "voucher_type": "Stock Reconciliation",
+                "voucher_no": {
+                  "get": "doc.name"
+                },
+                "debit": {
+                  "get": "value_diff"
+                },
+                "credit": 0,
+                "remarks": "Stock Gain"
+              }
+            },
+            {
+              "op": "db_insert",
+              "doctype": "GL Entry",
+              "values": {
+                "company": {
+                  "get": "doc.company"
+                },
+                "posting_date": {
+                  "get": "doc.posting_date"
+                },
+                "account": {
+                  "get": "doc.adjustment_account"
+                },
+                "voucher_type": "Stock Reconciliation",
+                "voucher_no": {
+                  "get": "doc.name"
+                },
+                "debit": 0,
+                "credit": {
+                  "get": "value_diff"
+                },
+                "remarks": "Stock Gain"
+              }
+            }
+          ]
+        },
+        {
+          "op": "if",
+          "test": {
+            "lt": [
+              {
+                "get": "value_diff"
+              },
+              0
+            ]
+          },
+          "then": [
+            {
+              "op": "db_insert",
+              "doctype": "GL Entry",
+              "values": {
+                "company": {
+                  "get": "doc.company"
+                },
+                "posting_date": {
+                  "get": "doc.posting_date"
+                },
+                "account": {
+                  "get": "doc.adjustment_account"
+                },
+                "voucher_type": "Stock Reconciliation",
+                "voucher_no": {
+                  "get": "doc.name"
+                },
+                "debit": {
+                  "abs": {
+                    "get": "value_diff"
+                  }
+                },
+                "credit": 0,
+                "remarks": "Stock Loss"
+              }
+            },
+            {
+              "op": "db_insert",
+              "doctype": "GL Entry",
+              "values": {
+                "company": {
+                  "get": "doc.company"
+                },
+                "posting_date": {
+                  "get": "doc.posting_date"
+                },
+                "account": {
+                  "get": "doc.stock_account"
+                },
+                "voucher_type": "Stock Reconciliation",
+                "voucher_no": {
+                  "get": "doc.name"
+                },
+                "debit": 0,
+                "credit": {
+                  "abs": {
+                    "get": "value_diff"
+                  }
+                },
+                "remarks": "Stock Loss"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+SELECT name,posting_date,customer,grand_total,outstanding_amount,docstatus FROM "tabSales Invoice" WHERE docstatus=1 AND (%(company)s='' OR company=%(company)s) AND (%(from_date)s='' OR posting_date>=%(from_date)s) AND (%(to_date)s='' OR posting_date<=%(to_date)s) ORDER BY posting_date,name

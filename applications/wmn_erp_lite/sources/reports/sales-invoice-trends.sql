@@ -1,0 +1,1 @@
+SELECT posting_date,COUNT(*) AS invoice_count,SUM(net_total) AS net_total,SUM(tax_amount) AS tax_amount,SUM(grand_total) AS grand_total FROM "tabSales Invoice" WHERE docstatus=1 AND (%(company)s='' OR company=%(company)s) AND (%(from_date)s='' OR posting_date>=%(from_date)s) AND (%(to_date)s='' OR posting_date<=%(to_date)s) GROUP BY posting_date ORDER BY posting_date

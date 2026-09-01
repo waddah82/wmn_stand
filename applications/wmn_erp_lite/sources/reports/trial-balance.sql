@@ -1,0 +1,1 @@
+SELECT account,SUM(debit) AS debit,SUM(credit) AS credit,SUM(debit-credit) AS balance FROM "tabGL Entry" WHERE (%(company)s = '' OR company = %(company)s) AND (%(from_date)s = '' OR posting_date >= %(from_date)s) AND (%(to_date)s = '' OR posting_date <= %(to_date)s) GROUP BY account HAVING ABS(SUM(debit))+ABS(SUM(credit))>0 ORDER BY account

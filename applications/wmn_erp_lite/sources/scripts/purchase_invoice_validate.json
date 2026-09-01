@@ -1,0 +1,569 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "db_get",
+      "doctype": "Company",
+      "name": {
+        "get": "doc.company"
+      },
+      "as": "company"
+    },
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "company"
+        }
+      },
+      "message": "Company is required."
+    },
+    {
+      "op": "set",
+      "path": "doc.currency",
+      "value": {
+        "field": {
+          "from": {
+            "get": "company"
+          },
+          "name": "default_currency"
+        }
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.warehouse",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.warehouse"
+          },
+          {
+            "field": {
+              "from": {
+                "get": "company"
+              },
+              "name": "default_warehouse"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.payable_account",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.payable_account"
+          },
+          {
+            "field": {
+              "from": {
+                "get": "company"
+              },
+              "name": "default_payable_account"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.expense_account",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.expense_account"
+          },
+          {
+            "field": {
+              "from": {
+                "get": "company"
+              },
+              "name": "default_purchase_account"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.tax_account",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.tax_account"
+          },
+          {
+            "field": {
+              "from": {
+                "get": "company"
+              },
+              "name": "default_tax_input_account"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.stock_account",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.stock_account"
+          },
+          {
+            "field": {
+              "from": {
+                "get": "company"
+              },
+              "name": "default_stock_account"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "doc.supplier"
+        }
+      },
+      "message": "Supplier is required."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "gt": [
+          {
+            "len": {
+              "get": "doc.items"
+            }
+          },
+          0
+        ]
+      },
+      "message": "At least one item is required."
+    },
+    {
+      "op": "for_each",
+      "items": {
+        "get": "doc.items"
+      },
+      "as": "row",
+      "steps": [
+        {
+          "op": "assert",
+          "test": {
+            "not_empty": {
+              "get": "row.item_code"
+            }
+          },
+          "message": "Item is required on every row."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "gt": [
+              {
+                "get": "row.qty"
+              },
+              0
+            ]
+          },
+          "message": "Item quantity must be greater than zero."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "gte": [
+              {
+                "get": "row.rate"
+              },
+              0
+            ]
+          },
+          "message": "Item rate cannot be negative."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "and": [
+              {
+                "gte": [
+                  {
+                    "coalesce": [
+                      {
+                        "get": "row.discount_percent"
+                      },
+                      0
+                    ]
+                  },
+                  0
+                ]
+              },
+              {
+                "lte": [
+                  {
+                    "coalesce": [
+                      {
+                        "get": "row.discount_percent"
+                      },
+                      0
+                    ]
+                  },
+                  100
+                ]
+              }
+            ]
+          },
+          "message": "Line discount must be between 0 and 100."
+        },
+        {
+          "op": "db_get",
+          "doctype": "Item",
+          "name": {
+            "get": "row.item_code"
+          },
+          "as": "item"
+        },
+        {
+          "op": "assert",
+          "test": {
+            "not_empty": {
+              "get": "item"
+            }
+          },
+          "message": "Unknown item."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "not": {
+              "eq": [
+                {
+                  "field": {
+                    "from": {
+                      "get": "item"
+                    },
+                    "name": "disabled"
+                  }
+                },
+                1
+              ]
+            }
+          },
+          "message": "Disabled item cannot be used."
+        },
+        {
+          "op": "set",
+          "path": "row.description",
+          "value": {
+            "coalesce": [
+              {
+                "get": "row.description"
+              },
+              {
+                "field": {
+                  "from": {
+                    "get": "item"
+                  },
+                  "name": "description"
+                }
+              },
+              {
+                "field": {
+                  "from": {
+                    "get": "item"
+                  },
+                  "name": "item_name"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "set",
+          "path": "row.uom",
+          "value": {
+            "coalesce": [
+              {
+                "get": "row.uom"
+              },
+              {
+                "field": {
+                  "from": {
+                    "get": "item"
+                  },
+                  "name": "stock_uom"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "set",
+          "path": "row.warehouse",
+          "value": {
+            "coalesce": [
+              {
+                "get": "row.warehouse"
+              },
+              {
+                "get": "doc.warehouse"
+              }
+            ]
+          }
+        },
+        {
+          "op": "set",
+          "path": "row.net_rate",
+          "value": {
+            "round": {
+              "value": {
+                "mul": [
+                  {
+                    "get": "row.rate"
+                  },
+                  {
+                    "sub": [
+                      1,
+                      {
+                        "div": [
+                          {
+                            "coalesce": [
+                              {
+                                "get": "row.discount_percent"
+                              },
+                              0
+                            ]
+                          },
+                          100
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "precision": 2
+            }
+          }
+        },
+        {
+          "op": "set",
+          "path": "row.amount",
+          "value": {
+            "round": {
+              "value": {
+                "mul": [
+                  {
+                    "get": "row.qty"
+                  },
+                  {
+                    "get": "row.net_rate"
+                  }
+                ]
+              },
+              "precision": 2
+            }
+          }
+        },
+        {
+          "op": "if",
+          "test": {
+            "eq": [
+              {
+                "get": "doc.update_stock"
+              },
+              1
+            ]
+          },
+          "then": [
+            {
+              "op": "assert",
+              "test": {
+                "not_empty": {
+                  "get": "row.warehouse"
+                }
+              },
+              "message": "Warehouse is required when Update Stock is enabled."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "op": "set",
+      "path": "doc.total",
+      "value": {
+        "round": {
+          "value": {
+            "sum": {
+              "items": {
+                "get": "doc.items"
+              },
+              "as": "r",
+              "value": {
+                "get": "r.amount"
+              }
+            }
+          },
+          "precision": 2
+        }
+      }
+    },
+    {
+      "op": "assert",
+      "test": {
+        "and": [
+          {
+            "gte": [
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.discount_amount"
+                  },
+                  0
+                ]
+              },
+              0
+            ]
+          },
+          {
+            "lte": [
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.discount_amount"
+                  },
+                  0
+                ]
+              },
+              {
+                "get": "doc.total"
+              }
+            ]
+          }
+        ]
+      },
+      "message": "Additional Discount must be between zero and Total."
+    },
+    {
+      "op": "set",
+      "path": "doc.net_total",
+      "value": {
+        "round": {
+          "value": {
+            "sub": [
+              {
+                "get": "doc.total"
+              },
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.discount_amount"
+                  },
+                  0
+                ]
+              }
+            ]
+          },
+          "precision": 2
+        }
+      }
+    },
+    {
+      "op": "assert",
+      "test": {
+        "and": [
+          {
+            "gte": [
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.tax_rate"
+                  },
+                  0
+                ]
+              },
+              0
+            ]
+          },
+          {
+            "lte": [
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.tax_rate"
+                  },
+                  0
+                ]
+              },
+              100
+            ]
+          }
+        ]
+      },
+      "message": "Tax Rate must be between 0 and 100."
+    },
+    {
+      "op": "set",
+      "path": "doc.tax_amount",
+      "value": {
+        "round": {
+          "value": {
+            "div": [
+              {
+                "mul": [
+                  {
+                    "get": "doc.net_total"
+                  },
+                  {
+                    "coalesce": [
+                      {
+                        "get": "doc.tax_rate"
+                      },
+                      0
+                    ]
+                  }
+                ]
+              },
+              100
+            ]
+          },
+          "precision": 2
+        }
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.grand_total",
+      "value": {
+        "round": {
+          "value": {
+            "add": [
+              {
+                "get": "doc.net_total"
+              },
+              {
+                "get": "doc.tax_amount"
+              }
+            ]
+          },
+          "precision": 2
+        }
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.outstanding_amount",
+      "value": {
+        "get": "doc.grand_total"
+      }
+    }
+  ]
+}

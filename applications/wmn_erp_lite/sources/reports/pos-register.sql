@@ -1,0 +1,1 @@
+SELECT name,posting_date,company,pos_profile,customer,net_total,tax_amount,grand_total,paid_amount,outstanding_amount,docstatus FROM "tabPOS Invoice" WHERE (%(company)s='' OR company=%(company)s) AND (%(from_date)s='' OR posting_date>=%(from_date)s) AND (%(to_date)s='' OR posting_date<=%(to_date)s) ORDER BY posting_date,name

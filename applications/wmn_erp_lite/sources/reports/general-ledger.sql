@@ -1,0 +1,1 @@
+SELECT posting_date,account,party_type,party,voucher_type,voucher_no,debit,credit,(debit-credit) AS balance,remarks FROM "tabGL Entry" WHERE (%(company)s = '' OR company = %(company)s) AND (%(from_date)s = '' OR posting_date >= %(from_date)s) AND (%(to_date)s = '' OR posting_date <= %(to_date)s) ORDER BY posting_date,name

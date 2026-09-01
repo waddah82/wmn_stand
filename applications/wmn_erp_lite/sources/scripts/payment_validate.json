@@ -1,0 +1,376 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "assert",
+      "test": {
+        "gt": [
+          {
+            "get": "doc.paid_amount"
+          },
+          0
+        ]
+      },
+      "message": "Paid Amount must be greater than zero."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "doc.paid_from"
+        }
+      },
+      "message": "Paid From Account is required."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "doc.paid_to"
+        }
+      },
+      "message": "Paid To Account is required."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "ne": [
+          {
+            "get": "doc.paid_from"
+          },
+          {
+            "get": "doc.paid_to"
+          }
+        ]
+      },
+      "message": "Paid From and Paid To accounts must be different."
+    },
+    {
+      "op": "db_get",
+      "doctype": "Account",
+      "name": {
+        "get": "doc.paid_from"
+      },
+      "as": "from_acct"
+    },
+    {
+      "op": "db_get",
+      "doctype": "Account",
+      "name": {
+        "get": "doc.paid_to"
+      },
+      "as": "to_acct"
+    },
+    {
+      "op": "assert",
+      "test": {
+        "and": [
+          {
+            "eq": [
+              {
+                "field": {
+                  "from": {
+                    "get": "from_acct"
+                  },
+                  "name": "company"
+                }
+              },
+              {
+                "get": "doc.company"
+              }
+            ]
+          },
+          {
+            "eq": [
+              {
+                "field": {
+                  "from": {
+                    "get": "to_acct"
+                  },
+                  "name": "company"
+                }
+              },
+              {
+                "get": "doc.company"
+              }
+            ]
+          }
+        ]
+      },
+      "message": "Payment accounts must belong to the selected company."
+    },
+    {
+      "op": "if",
+      "test": {
+        "eq": [
+          {
+            "get": "doc.payment_type"
+          },
+          "Receive"
+        ]
+      },
+      "then": [
+        {
+          "op": "assert",
+          "test": {
+            "eq": [
+              {
+                "get": "doc.party_type"
+              },
+              "Customer"
+            ]
+          },
+          "message": "Receive payments in Lite v1 require a Customer."
+        },
+        {
+          "op": "db_get",
+          "doctype": "Customer",
+          "name": {
+            "get": "doc.party"
+          },
+          "as": "party_doc"
+        },
+        {
+          "op": "assert",
+          "test": {
+            "not_empty": {
+              "get": "party_doc"
+            }
+          },
+          "message": "Customer does not exist."
+        }
+      ],
+      "else": [
+        {
+          "op": "assert",
+          "test": {
+            "eq": [
+              {
+                "get": "doc.payment_type"
+              },
+              "Pay"
+            ]
+          },
+          "message": "Payment Type must be Receive or Pay."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "eq": [
+              {
+                "get": "doc.party_type"
+              },
+              "Supplier"
+            ]
+          },
+          "message": "Pay payments in Lite v1 require a Supplier."
+        },
+        {
+          "op": "db_get",
+          "doctype": "Supplier",
+          "name": {
+            "get": "doc.party"
+          },
+          "as": "party_doc"
+        },
+        {
+          "op": "assert",
+          "test": {
+            "not_empty": {
+              "get": "party_doc"
+            }
+          },
+          "message": "Supplier does not exist."
+        }
+      ]
+    },
+    {
+      "op": "if",
+      "test": {
+        "not_empty": {
+          "get": "doc.reference_name"
+        }
+      },
+      "then": [
+        {
+          "op": "assert",
+          "test": {
+            "not_empty": {
+              "get": "doc.reference_doctype"
+            }
+          },
+          "message": "Reference Document Type is required when a Reference Document is selected."
+        },
+        {
+          "op": "db_get",
+          "doctype": {
+            "get": "doc.reference_doctype"
+          },
+          "name": {
+            "get": "doc.reference_name"
+          },
+          "as": "reference_doc"
+        },
+        {
+          "op": "assert",
+          "test": {
+            "not_empty": {
+              "get": "reference_doc"
+            }
+          },
+          "message": "Referenced invoice does not exist."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "eq": [
+              {
+                "field": {
+                  "from": {
+                    "get": "reference_doc"
+                  },
+                  "name": "company"
+                }
+              },
+              {
+                "get": "doc.company"
+              }
+            ]
+          },
+          "message": "Referenced invoice belongs to a different company."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "eq": [
+              {
+                "field": {
+                  "from": {
+                    "get": "reference_doc"
+                  },
+                  "name": "docstatus"
+                }
+              },
+              1
+            ]
+          },
+          "message": "Payment reference must be a submitted invoice."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "gte": [
+              {
+                "coalesce": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "reference_doc"
+                      },
+                      "name": "outstanding_amount"
+                    }
+                  },
+                  0
+                ]
+              },
+              {
+                "get": "doc.paid_amount"
+              }
+            ]
+          },
+          "message": "Paid Amount cannot exceed the referenced invoice outstanding amount."
+        },
+        {
+          "op": "if",
+          "test": {
+            "eq": [
+              {
+                "get": "doc.payment_type"
+              },
+              "Receive"
+            ]
+          },
+          "then": [
+            {
+              "op": "assert",
+              "test": {
+                "or": [
+                  {
+                    "eq": [
+                      {
+                        "get": "doc.reference_doctype"
+                      },
+                      "Sales Invoice"
+                    ]
+                  },
+                  {
+                    "eq": [
+                      {
+                        "get": "doc.reference_doctype"
+                      },
+                      "POS Invoice"
+                    ]
+                  }
+                ]
+              },
+              "message": "Customer receipts may reference Sales Invoice or POS Invoice only."
+            },
+            {
+              "op": "assert",
+              "test": {
+                "eq": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "reference_doc"
+                      },
+                      "name": "customer"
+                    }
+                  },
+                  {
+                    "get": "doc.party"
+                  }
+                ]
+              },
+              "message": "Referenced invoice belongs to a different customer."
+            }
+          ],
+          "else": [
+            {
+              "op": "assert",
+              "test": {
+                "eq": [
+                  {
+                    "get": "doc.reference_doctype"
+                  },
+                  "Purchase Invoice"
+                ]
+              },
+              "message": "Supplier payments may reference Purchase Invoice only."
+            },
+            {
+              "op": "assert",
+              "test": {
+                "eq": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "reference_doc"
+                      },
+                      "name": "supplier"
+                    }
+                  },
+                  {
+                    "get": "doc.party"
+                  }
+                ]
+              },
+              "message": "Referenced invoice belongs to a different supplier."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1724 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "db_get",
+      "doctype": "POS Profile",
+      "name": {
+        "get": "doc.pos_profile"
+      },
+      "as": "profile"
+    },
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "profile"
+        }
+      },
+      "message": "POS Profile is required."
+    },
+    {
+      "op": "set",
+      "path": "doc.company",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.company"
+          },
+          {
+            "field": {
+              "from": {
+                "get": "profile"
+              },
+              "name": "company"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.customer",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.customer"
+          },
+          {
+            "field": {
+              "from": {
+                "get": "profile"
+              },
+              "name": "default_customer"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.warehouse",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.warehouse"
+          },
+          {
+            "field": {
+              "from": {
+                "get": "profile"
+              },
+              "name": "warehouse"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.allow_credit",
+      "value": {
+        "coalesce": [
+          {
+            "field": {
+              "from": {
+                "get": "profile"
+              },
+              "name": "allow_credit"
+            }
+          },
+          0
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.allow_partial_payment",
+      "value": {
+        "coalesce": [
+          {
+            "field": {
+              "from": {
+                "get": "profile"
+              },
+              "name": "allow_partial_payment"
+            }
+          },
+          0
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.price_list",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.price_list"
+          },
+          {
+            "field": {
+              "from": {
+                "get": "profile"
+              },
+              "name": "selling_price_list"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.pos_status",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.pos_status"
+          },
+          {
+            "if": {
+              "test": {
+                "eq": [
+                  {
+                    "coalesce": [
+                      {
+                        "get": "doc.is_return"
+                      },
+                      0
+                    ]
+                  },
+                  1
+                ]
+              },
+              "then": "Return",
+              "else": "Draft"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "db_get",
+      "doctype": "POS Opening Entry",
+      "name": {
+        "get": "doc.pos_opening_entry"
+      },
+      "as": "opening"
+    },
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "opening"
+        }
+      },
+      "message": "An open POS session is required."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "eq": [
+          {
+            "field": {
+              "from": {
+                "get": "opening"
+              },
+              "name": "docstatus"
+            }
+          },
+          1
+        ]
+      },
+      "message": "POS Opening Entry must be submitted."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "eq": [
+          {
+            "field": {
+              "from": {
+                "get": "opening"
+              },
+              "name": "status"
+            }
+          },
+          "Open"
+        ]
+      },
+      "message": "POS session is already closed."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "eq": [
+          {
+            "field": {
+              "from": {
+                "get": "opening"
+              },
+              "name": "pos_profile"
+            }
+          },
+          {
+            "get": "doc.pos_profile"
+          }
+        ]
+      },
+      "message": "POS Opening Entry does not belong to the selected POS Profile."
+    },
+    {
+      "op": "if",
+      "test": {
+        "eq": [
+          {
+            "coalesce": [
+              {
+                "get": "doc.is_return"
+              },
+              0
+            ]
+          },
+          1
+        ]
+      },
+      "then": [
+        {
+          "op": "assert",
+          "test": {
+            "eq": [
+              {
+                "coalesce": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "profile"
+                      },
+                      "name": "allow_returns"
+                    }
+                  },
+                  1
+                ]
+              },
+              1
+            ]
+          },
+          "message": "Returns are disabled for this POS Profile."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "not_empty": {
+              "get": "doc.return_against"
+            }
+          },
+          "message": "Return Against is required for a POS return."
+        },
+        {
+          "op": "db_get",
+          "doctype": "POS Invoice",
+          "name": {
+            "get": "doc.return_against"
+          },
+          "as": "original_invoice"
+        },
+        {
+          "op": "assert",
+          "test": {
+            "not_empty": {
+              "get": "original_invoice"
+            }
+          },
+          "message": "Original POS Invoice was not found."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "eq": [
+              {
+                "field": {
+                  "from": {
+                    "get": "original_invoice"
+                  },
+                  "name": "docstatus"
+                }
+              },
+              1
+            ]
+          },
+          "message": "Only a submitted POS Invoice can be returned."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "ne": [
+              {
+                "coalesce": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "original_invoice"
+                      },
+                      "name": "is_return"
+                    }
+                  },
+                  0
+                ]
+              },
+              1
+            ]
+          },
+          "message": "A return invoice cannot be returned again."
+        },
+        {
+          "op": "set",
+          "path": "doc.customer",
+          "value": {
+            "field": {
+              "from": {
+                "get": "original_invoice"
+              },
+              "name": "customer"
+            }
+          }
+        },
+        {
+          "op": "for_each",
+          "items": {
+            "get": "doc.items"
+          },
+          "as": "return_row",
+          "steps": [
+            {
+              "op": "db_list",
+              "doctype": "POS Invoice Item",
+              "fields": [
+                "name",
+                "qty",
+                "returned_qty",
+                "rate",
+                "discount_percent",
+                "uom",
+                "warehouse"
+              ],
+              "filters": [
+                [
+                  "parent",
+                  "=",
+                  {
+                    "get": "doc.return_against"
+                  }
+                ],
+                [
+                  "item_code",
+                  "=",
+                  {
+                    "get": "return_row.item_code"
+                  }
+                ]
+              ],
+              "limit": 1,
+              "as": "original_lines"
+            },
+            {
+              "op": "assert",
+              "test": {
+                "eq": [
+                  {
+                    "len": {
+                      "get": "original_lines"
+                    }
+                  },
+                  1
+                ]
+              },
+              "message": "Return item {{ return_row.item_code }} is not present on the original POS Invoice."
+            },
+            {
+              "op": "assert",
+              "test": {
+                "lte": [
+                  {
+                    "get": "return_row.qty"
+                  },
+                  {
+                    "sub": [
+                      {
+                        "get": "original_lines.0.qty"
+                      },
+                      {
+                        "coalesce": [
+                          {
+                            "get": "original_lines.0.returned_qty"
+                          },
+                          0
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "message": "Return quantity exceeds the remaining returnable quantity for {{ return_row.item_code }}."
+            },
+            {
+              "op": "set",
+              "path": "return_row.rate",
+              "value": {
+                "get": "original_lines.0.rate"
+              }
+            },
+            {
+              "op": "set",
+              "path": "return_row.discount_percent",
+              "value": {
+                "coalesce": [
+                  {
+                    "get": "original_lines.0.discount_percent"
+                  },
+                  0
+                ]
+              }
+            },
+            {
+              "op": "set",
+              "path": "return_row.uom",
+              "value": {
+                "get": "original_lines.0.uom"
+              }
+            },
+            {
+              "op": "set",
+              "path": "return_row.warehouse",
+              "value": {
+                "coalesce": [
+                  {
+                    "get": "original_lines.0.warehouse"
+                  },
+                  {
+                    "get": "doc.warehouse"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "op": "db_get",
+      "doctype": "Company",
+      "name": {
+        "get": "doc.company"
+      },
+      "as": "company"
+    },
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "company"
+        }
+      },
+      "message": "Company is required."
+    },
+    {
+      "op": "set",
+      "path": "doc.currency",
+      "value": {
+        "coalesce": [
+          {
+            "field": {
+              "from": {
+                "get": "profile"
+              },
+              "name": "currency"
+            }
+          },
+          {
+            "field": {
+              "from": {
+                "get": "company"
+              },
+              "name": "default_currency"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.warehouse",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.warehouse"
+          },
+          {
+            "field": {
+              "from": {
+                "get": "company"
+              },
+              "name": "default_warehouse"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.receivable_account",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.receivable_account"
+          },
+          {
+            "field": {
+              "from": {
+                "get": "company"
+              },
+              "name": "default_receivable_account"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.income_account",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.income_account"
+          },
+          {
+            "field": {
+              "from": {
+                "get": "company"
+              },
+              "name": "default_sales_account"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.tax_account",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.tax_account"
+          },
+          {
+            "field": {
+              "from": {
+                "get": "company"
+              },
+              "name": "default_tax_output_account"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.stock_account",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.stock_account"
+          },
+          {
+            "field": {
+              "from": {
+                "get": "company"
+              },
+              "name": "default_stock_account"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.cogs_account",
+      "value": {
+        "coalesce": [
+          {
+            "get": "doc.cogs_account"
+          },
+          {
+            "field": {
+              "from": {
+                "get": "company"
+              },
+              "name": "default_cogs_account"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "assert",
+      "test": {
+        "not_empty": {
+          "get": "doc.customer"
+        }
+      },
+      "message": "Customer is required."
+    },
+    {
+      "op": "assert",
+      "test": {
+        "gt": [
+          {
+            "len": {
+              "get": "doc.items"
+            }
+          },
+          0
+        ]
+      },
+      "message": "At least one item is required."
+    },
+    {
+      "op": "for_each",
+      "items": {
+        "get": "doc.items"
+      },
+      "as": "row",
+      "steps": [
+        {
+          "op": "assert",
+          "test": {
+            "not_empty": {
+              "get": "row.item_code"
+            }
+          },
+          "message": "Item is required on every row."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "gt": [
+              {
+                "get": "row.qty"
+              },
+              0
+            ]
+          },
+          "message": "Item quantity must be greater than zero."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "gte": [
+              {
+                "get": "row.rate"
+              },
+              0
+            ]
+          },
+          "message": "Item rate cannot be negative."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "and": [
+              {
+                "gte": [
+                  {
+                    "coalesce": [
+                      {
+                        "get": "row.discount_percent"
+                      },
+                      0
+                    ]
+                  },
+                  0
+                ]
+              },
+              {
+                "lte": [
+                  {
+                    "coalesce": [
+                      {
+                        "get": "row.discount_percent"
+                      },
+                      0
+                    ]
+                  },
+                  100
+                ]
+              }
+            ]
+          },
+          "message": "Line discount must be between 0 and 100."
+        },
+        {
+          "op": "if",
+          "metadata_tag": "profile_line_discount_gate",
+          "test": {
+            "ne": [
+              {
+                "coalesce": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "profile"
+                      },
+                      "name": "allow_edit_discount"
+                    }
+                  },
+                  0
+                ]
+              },
+              1
+            ]
+          },
+          "then": [
+            {
+              "op": "assert",
+              "test": {
+                "close": [
+                  {
+                    "coalesce": [
+                      {
+                        "get": "row.discount_percent"
+                      },
+                      0
+                    ]
+                  },
+                  0,
+                  0.005
+                ]
+              },
+              "message": "Item discount is disabled for this POS Profile."
+            }
+          ]
+        },
+        {
+          "op": "db_get",
+          "doctype": "Item",
+          "name": {
+            "get": "row.item_code"
+          },
+          "as": "item"
+        },
+        {
+          "op": "assert",
+          "test": {
+            "not_empty": {
+              "get": "item"
+            }
+          },
+          "message": "Unknown item."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "not": {
+              "eq": [
+                {
+                  "field": {
+                    "from": {
+                      "get": "item"
+                    },
+                    "name": "disabled"
+                  }
+                },
+                1
+              ]
+            }
+          },
+          "message": "Disabled item cannot be used."
+        },
+        {
+          "op": "set",
+          "path": "row.is_stock_item",
+          "value": {
+            "coalesce": [
+              {
+                "field": {
+                  "from": {
+                    "get": "item"
+                  },
+                  "name": "is_stock_item"
+                }
+              },
+              1
+            ]
+          }
+        },
+        {
+          "op": "set",
+          "path": "row.description",
+          "value": {
+            "coalesce": [
+              {
+                "get": "row.description"
+              },
+              {
+                "field": {
+                  "from": {
+                    "get": "item"
+                  },
+                  "name": "description"
+                }
+              },
+              {
+                "field": {
+                  "from": {
+                    "get": "item"
+                  },
+                  "name": "item_name"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "set",
+          "path": "row.uom",
+          "value": {
+            "coalesce": [
+              {
+                "get": "row.uom"
+              },
+              {
+                "field": {
+                  "from": {
+                    "get": "item"
+                  },
+                  "name": "stock_uom"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "set",
+          "path": "row.warehouse",
+          "value": {
+            "coalesce": [
+              {
+                "get": "row.warehouse"
+              },
+              {
+                "get": "doc.warehouse"
+              }
+            ]
+          }
+        },
+        {
+          "op": "set",
+          "path": "row.net_rate",
+          "value": {
+            "round": {
+              "value": {
+                "mul": [
+                  {
+                    "get": "row.rate"
+                  },
+                  {
+                    "sub": [
+                      1,
+                      {
+                        "div": [
+                          {
+                            "coalesce": [
+                              {
+                                "get": "row.discount_percent"
+                              },
+                              0
+                            ]
+                          },
+                          100
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "precision": 2
+            }
+          }
+        },
+        {
+          "op": "set",
+          "path": "row.amount",
+          "value": {
+            "round": {
+              "value": {
+                "mul": [
+                  {
+                    "get": "row.qty"
+                  },
+                  {
+                    "get": "row.net_rate"
+                  }
+                ]
+              },
+              "precision": 2
+            }
+          }
+        },
+        {
+          "op": "if",
+          "test": {
+            "eq": [
+              {
+                "get": "doc.update_stock"
+              },
+              1
+            ]
+          },
+          "then": [
+            {
+              "op": "assert",
+              "test": {
+                "not_empty": {
+                  "get": "row.warehouse"
+                }
+              },
+              "message": "Warehouse is required when Update Stock is enabled."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "op": "let",
+      "name": "base_total",
+      "value": {
+        "round": {
+          "value": {
+            "sum": {
+              "items": {
+                "get": "doc.items"
+              },
+              "as": "r",
+              "value": {
+                "get": "r.amount"
+              }
+            }
+          },
+          "precision": 2
+        }
+      }
+    },
+    {
+      "op": "if",
+      "metadata_tag": "profile_discount_gate",
+      "test": {
+        "ne": [
+          {
+            "coalesce": [
+              {
+                "field": {
+                  "from": {
+                    "get": "profile"
+                  },
+                  "name": "allow_edit_discount"
+                }
+              },
+              0
+            ]
+          },
+          1
+        ]
+      },
+      "then": [
+        {
+          "op": "assert",
+          "test": {
+            "close": [
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.discount_amount"
+                  },
+                  0
+                ]
+              },
+              0,
+              0.005
+            ]
+          },
+          "message": "Additional Discount is disabled for this POS Profile."
+        }
+      ]
+    },
+    {
+      "op": "assert",
+      "test": {
+        "and": [
+          {
+            "gte": [
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.discount_amount"
+                  },
+                  0
+                ]
+              },
+              0
+            ]
+          },
+          {
+            "lte": [
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.discount_amount"
+                  },
+                  0
+                ]
+              },
+              {
+                "get": "base_total"
+              }
+            ]
+          }
+        ]
+      },
+      "message": "Additional Discount must be between zero and Total."
+    },
+    {
+      "op": "let",
+      "name": "base_net",
+      "value": {
+        "round": {
+          "value": {
+            "sub": [
+              {
+                "get": "base_total"
+              },
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.discount_amount"
+                  },
+                  0
+                ]
+              }
+            ]
+          },
+          "precision": 2
+        }
+      }
+    },
+    {
+      "op": "assert",
+      "test": {
+        "and": [
+          {
+            "gte": [
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.tax_rate"
+                  },
+                  0
+                ]
+              },
+              0
+            ]
+          },
+          {
+            "lte": [
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.tax_rate"
+                  },
+                  0
+                ]
+              },
+              100
+            ]
+          }
+        ]
+      },
+      "message": "Tax Rate must be between 0 and 100."
+    },
+    {
+      "op": "let",
+      "name": "base_tax",
+      "value": {
+        "round": {
+          "value": {
+            "div": [
+              {
+                "mul": [
+                  {
+                    "get": "base_net"
+                  },
+                  {
+                    "coalesce": [
+                      {
+                        "get": "doc.tax_rate"
+                      },
+                      0
+                    ]
+                  }
+                ]
+              },
+              100
+            ]
+          },
+          "precision": 2
+        }
+      }
+    },
+    {
+      "op": "let",
+      "name": "base_grand",
+      "value": {
+        "round": {
+          "value": {
+            "add": [
+              {
+                "get": "base_net"
+              },
+              {
+                "get": "base_tax"
+              }
+            ]
+          },
+          "precision": 2
+        }
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.total",
+      "value": {
+        "if": {
+          "test": {
+            "eq": [
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.is_return"
+                  },
+                  0
+                ]
+              },
+              1
+            ]
+          },
+          "then": {
+            "mul": [
+              {
+                "get": "base_total"
+              },
+              -1
+            ]
+          },
+          "else": {
+            "get": "base_total"
+          }
+        }
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.net_total",
+      "value": {
+        "if": {
+          "test": {
+            "eq": [
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.is_return"
+                  },
+                  0
+                ]
+              },
+              1
+            ]
+          },
+          "then": {
+            "mul": [
+              {
+                "get": "base_net"
+              },
+              -1
+            ]
+          },
+          "else": {
+            "get": "base_net"
+          }
+        }
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.tax_amount",
+      "value": {
+        "if": {
+          "test": {
+            "eq": [
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.is_return"
+                  },
+                  0
+                ]
+              },
+              1
+            ]
+          },
+          "then": {
+            "mul": [
+              {
+                "get": "base_tax"
+              },
+              -1
+            ]
+          },
+          "else": {
+            "get": "base_tax"
+          }
+        }
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.grand_total",
+      "value": {
+        "if": {
+          "test": {
+            "eq": [
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.is_return"
+                  },
+                  0
+                ]
+              },
+              1
+            ]
+          },
+          "then": {
+            "mul": [
+              {
+                "get": "base_grand"
+              },
+              -1
+            ]
+          },
+          "else": {
+            "get": "base_grand"
+          }
+        }
+      }
+    },
+    {
+      "op": "for_each",
+      "items": {
+        "get": "doc.payments"
+      },
+      "as": "pay",
+      "steps": [
+        {
+          "op": "assert",
+          "test": {
+            "gt": [
+              {
+                "get": "pay.amount"
+              },
+              0
+            ]
+          },
+          "message": "POS payment/refund amount must be greater than zero."
+        },
+        {
+          "op": "db_list",
+          "doctype": "POS Profile Payment",
+          "fields": [
+            "name",
+            "mode_of_payment",
+            "allow_in_returns"
+          ],
+          "filters": [
+            [
+              "parent",
+              "=",
+              {
+                "get": "doc.pos_profile"
+              }
+            ],
+            [
+              "mode_of_payment",
+              "=",
+              {
+                "get": "pay.mode_of_payment"
+              }
+            ]
+          ],
+          "limit": 1,
+          "as": "profile_payment_rows"
+        },
+        {
+          "op": "assert",
+          "test": {
+            "eq": [
+              {
+                "len": {
+                  "get": "profile_payment_rows"
+                }
+              },
+              1
+            ]
+          },
+          "message": "Mode of Payment {{ pay.mode_of_payment }} is not configured in the POS Profile."
+        },
+        {
+          "op": "if",
+          "test": {
+            "eq": [
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.is_return"
+                  },
+                  0
+                ]
+              },
+              1
+            ]
+          },
+          "then": [
+            {
+              "op": "assert",
+              "test": {
+                "eq": [
+                  {
+                    "coalesce": [
+                      {
+                        "get": "profile_payment_rows.0.allow_in_returns"
+                      },
+                      0
+                    ]
+                  },
+                  1
+                ]
+              },
+              "message": "Mode of Payment {{ pay.mode_of_payment }} is not allowed for returns."
+            }
+          ]
+        },
+        {
+          "op": "db_get",
+          "doctype": "Mode of Payment",
+          "name": {
+            "get": "pay.mode_of_payment"
+          },
+          "as": "mop"
+        },
+        {
+          "op": "assert",
+          "test": {
+            "not_empty": {
+              "get": "mop"
+            }
+          },
+          "message": "Unknown Mode of Payment."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "eq": [
+              {
+                "coalesce": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "mop"
+                      },
+                      "name": "enabled"
+                    }
+                  },
+                  1
+                ]
+              },
+              1
+            ]
+          },
+          "message": "A disabled Mode of Payment cannot be used."
+        },
+        {
+          "op": "assert",
+          "test": {
+            "or": [
+              {
+                "empty": {
+                  "field": {
+                    "from": {
+                      "get": "mop"
+                    },
+                    "name": "company"
+                  }
+                }
+              },
+              {
+                "eq": [
+                  {
+                    "field": {
+                      "from": {
+                        "get": "mop"
+                      },
+                      "name": "company"
+                    }
+                  },
+                  {
+                    "get": "doc.company"
+                  }
+                ]
+              }
+            ]
+          },
+          "message": "Mode of Payment does not belong to this Company."
+        },
+        {
+          "op": "set",
+          "path": "pay.payment_account",
+          "value": {
+            "coalesce": [
+              {
+                "get": "pay.payment_account"
+              },
+              {
+                "field": {
+                  "from": {
+                    "get": "mop"
+                  },
+                  "name": "default_account"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "assert",
+          "test": {
+            "not_empty": {
+              "get": "pay.payment_account"
+            }
+          },
+          "message": "Payment Account is required."
+        }
+      ]
+    },
+    {
+      "op": "let",
+      "name": "payment_total",
+      "value": {
+        "round": {
+          "value": {
+            "sum": {
+              "items": {
+                "get": "doc.payments"
+              },
+              "as": "p",
+              "value": {
+                "coalesce": [
+                  {
+                    "get": "p.amount"
+                  },
+                  0
+                ]
+              }
+            }
+          },
+          "precision": 2
+        }
+      }
+    },
+    {
+      "op": "if",
+      "metadata_tag": "return_refund_cap",
+      "test": {
+        "eq": [
+          {
+            "coalesce": [
+              {
+                "get": "doc.is_return"
+              },
+              0
+            ]
+          },
+          1
+        ]
+      },
+      "then": [
+        {
+          "op": "assert",
+          "test": {
+            "lte": [
+              {
+                "get": "payment_total"
+              },
+              {
+                "max": [
+                  0,
+                  {
+                    "sub": [
+                      {
+                        "abs": {
+                          "field": {
+                            "from": {
+                              "get": "original_invoice"
+                            },
+                            "name": "paid_amount"
+                          }
+                        }
+                      },
+                      {
+                        "coalesce": [
+                          {
+                            "field": {
+                              "from": {
+                                "get": "original_invoice"
+                              },
+                              "name": "refunded_amount"
+                            }
+                          },
+                          0
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "message": "Refund allocation exceeds the remaining paid amount on the original POS Invoice."
+        }
+      ]
+    },
+    {
+      "op": "assert",
+      "test": {
+        "lte": [
+          {
+            "get": "payment_total"
+          },
+          {
+            "get": "base_grand"
+          }
+        ]
+      },
+      "message": "Payment/refund allocation cannot exceed Grand Total."
+    },
+    {
+      "op": "set",
+      "path": "doc.paid_amount",
+      "value": {
+        "if": {
+          "test": {
+            "eq": [
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.is_return"
+                  },
+                  0
+                ]
+              },
+              1
+            ]
+          },
+          "then": {
+            "mul": [
+              {
+                "get": "payment_total"
+              },
+              -1
+            ]
+          },
+          "else": {
+            "get": "payment_total"
+          }
+        }
+      }
+    },
+    {
+      "op": "set",
+      "path": "doc.outstanding_amount",
+      "value": {
+        "round": {
+          "value": {
+            "sub": [
+              {
+                "get": "doc.grand_total"
+              },
+              {
+                "get": "doc.paid_amount"
+              }
+            ]
+          },
+          "precision": 2
+        }
+      }
+    },
+    {
+      "op": "if",
+      "test": {
+        "and": [
+          {
+            "ne": [
+              {
+                "get": "doc.pos_status"
+              },
+              "Held"
+            ]
+          },
+          {
+            "ne": [
+              {
+                "coalesce": [
+                  {
+                    "get": "doc.is_return"
+                  },
+                  0
+                ]
+              },
+              1
+            ]
+          },
+          {
+            "gt": [
+              {
+                "get": "doc.outstanding_amount"
+              },
+              0
+            ]
+          }
+        ]
+      },
+      "then": [
+        {
+          "op": "if",
+          "test": {
+            "eq": [
+              {
+                "get": "doc.paid_amount"
+              },
+              0
+            ]
+          },
+          "then": [
+            {
+              "op": "assert",
+              "test": {
+                "eq": [
+                  {
+                    "get": "doc.allow_credit"
+                  },
+                  1
+                ]
+              },
+              "message": "Credit sale is disabled for this POS Profile."
+            }
+          ],
+          "else": [
+            {
+              "op": "assert",
+              "test": {
+                "or": [
+                  {
+                    "eq": [
+                      {
+                        "get": "doc.allow_credit"
+                      },
+                      1
+                    ]
+                  },
+                  {
+                    "eq": [
+                      {
+                        "get": "doc.allow_partial_payment"
+                      },
+                      1
+                    ]
+                  }
+                ]
+              },
+              "message": "Partial payment is disabled for this POS Profile."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

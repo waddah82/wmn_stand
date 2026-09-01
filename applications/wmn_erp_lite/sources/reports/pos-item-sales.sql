@@ -1,0 +1,1 @@
+SELECT i.item_code,SUM(i.qty) AS qty,SUM(i.amount) AS amount FROM "tabPOS Invoice" h JOIN "tabPOS Invoice Item" i ON i.parent=h.name AND i.parenttype='POS Invoice' WHERE h.docstatus=1 AND (%(company)s='' OR h.company=%(company)s) AND (%(from_date)s='' OR h.posting_date>=%(from_date)s) AND (%(to_date)s='' OR h.posting_date<=%(to_date)s) GROUP BY i.item_code ORDER BY amount DESC

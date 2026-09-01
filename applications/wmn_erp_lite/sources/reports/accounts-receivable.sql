@@ -1,0 +1,1 @@
+SELECT g.party AS customer,SUM(g.debit-g.credit) AS outstanding FROM "tabGL Entry" g JOIN "tabAccount" a ON a.name=g.account WHERE (%(company)s='' OR g.company=%(company)s) AND g.party_type='Customer' AND a.account_type='Receivable' AND (%(to_date)s='' OR g.posting_date<=%(to_date)s) GROUP BY g.party HAVING ABS(SUM(g.debit-g.credit))>0.0001 ORDER BY outstanding DESC

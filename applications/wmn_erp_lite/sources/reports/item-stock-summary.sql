@@ -1,0 +1,1 @@
+SELECT item_code,SUM(actual_qty) AS actual_qty,CASE WHEN SUM(actual_qty)=0 THEN 0 ELSE SUM(stock_value)/SUM(actual_qty) END AS average_valuation_rate,SUM(stock_value) AS stock_value FROM "tabBin" WHERE (%(item_code)s='' OR item_code=%(item_code)s) GROUP BY item_code ORDER BY item_code

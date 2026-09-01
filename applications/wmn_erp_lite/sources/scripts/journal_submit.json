@@ -1,0 +1,69 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "for_each",
+      "items": {
+        "get": "doc.accounts"
+      },
+      "as": "row",
+      "steps": [
+        {
+          "op": "db_insert",
+          "doctype": "GL Entry",
+          "values": {
+            "company": {
+              "get": "doc.company"
+            },
+            "posting_date": {
+              "get": "doc.posting_date"
+            },
+            "account": {
+              "get": "row.account"
+            },
+            "party_type": {
+              "get": "row.party_type"
+            },
+            "party": {
+              "get": "row.party"
+            },
+            "voucher_type": "Journal Entry",
+            "voucher_no": {
+              "get": "doc.name"
+            },
+            "debit": {
+              "coalesce": [
+                {
+                  "get": "row.debit"
+                },
+                0
+              ]
+            },
+            "credit": {
+              "coalesce": [
+                {
+                  "get": "row.credit"
+                },
+                0
+              ]
+            },
+            "cost_center": {
+              "get": "row.cost_center"
+            },
+            "remarks": {
+              "coalesce": [
+                {
+                  "get": "row.remarks"
+                },
+                {
+                  "get": "doc.user_remark"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

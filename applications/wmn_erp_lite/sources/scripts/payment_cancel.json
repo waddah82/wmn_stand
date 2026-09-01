@@ -1,0 +1,107 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "if",
+      "test": {
+        "not_empty": {
+          "get": "doc.reference_name"
+        }
+      },
+      "then": [
+        {
+          "op": "db_get",
+          "doctype": {
+            "get": "doc.reference_doctype"
+          },
+          "name": {
+            "get": "doc.reference_name"
+          },
+          "as": "reference_doc"
+        },
+        {
+          "op": "assert",
+          "test": {
+            "not_empty": {
+              "get": "reference_doc"
+            }
+          },
+          "message": "Referenced invoice no longer exists."
+        },
+        {
+          "op": "db_update",
+          "doctype": {
+            "get": "doc.reference_doctype"
+          },
+          "name": {
+            "get": "doc.reference_name"
+          },
+          "values": {
+            "outstanding_amount": {
+              "round": {
+                "value": {
+                  "add": [
+                    {
+                      "coalesce": [
+                        {
+                          "field": {
+                            "from": {
+                              "get": "reference_doc"
+                            },
+                            "name": "outstanding_amount"
+                          }
+                        },
+                        0
+                      ]
+                    },
+                    {
+                      "get": "doc.paid_amount"
+                    }
+                  ]
+                },
+                "precision": 2
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "op": "db_delete",
+      "doctype": "GL Entry",
+      "filters": [
+        [
+          "voucher_type",
+          "=",
+          "Payment Entry"
+        ],
+        [
+          "voucher_no",
+          "=",
+          {
+            "get": "doc.name"
+          }
+        ]
+      ]
+    },
+    {
+      "op": "db_delete",
+      "doctype": "Payment Ledger Entry",
+      "filters": [
+        [
+          "voucher_type",
+          "=",
+          "Payment Entry"
+        ],
+        [
+          "voucher_no",
+          "=",
+          {
+            "get": "doc.name"
+          }
+        ]
+      ]
+    }
+  ]
+}

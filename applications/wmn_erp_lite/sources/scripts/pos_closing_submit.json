@@ -1,0 +1,19 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "db_update",
+      "doctype": "POS Opening Entry",
+      "name": {
+        "get": "doc.pos_opening_entry"
+      },
+      "values": {
+        "status": "Closed",
+        "closing_entry": {
+          "get": "doc.name"
+        }
+      }
+    }
+  ]
+}

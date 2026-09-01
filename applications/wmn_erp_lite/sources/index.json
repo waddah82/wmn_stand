@@ -1,0 +1,298 @@
+[
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/account-balance.sql",
+    "file": "sources/reports/account-balance.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/accounts-payable.sql",
+    "file": "sources/reports/accounts-payable.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/accounts-receivable.sql",
+    "file": "sources/reports/accounts-receivable.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/balance-sheet.sql",
+    "file": "sources/reports/balance-sheet.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/cash-flow-summary.sql",
+    "file": "sources/reports/cash-flow-summary.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/customer-ledger-summary.sql",
+    "file": "sources/reports/customer-ledger-summary.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/customer-wise-sales.sql",
+    "file": "sources/reports/customer-wise-sales.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/general-ledger.sql",
+    "file": "sources/reports/general-ledger.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/gross-profit.sql",
+    "file": "sources/reports/gross-profit.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/inventory-valuation.sql",
+    "file": "sources/reports/inventory-valuation.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/item-stock-summary.sql",
+    "file": "sources/reports/item-stock-summary.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/item-wise-purchase.sql",
+    "file": "sources/reports/item-wise-purchase.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/item-wise-sales.sql",
+    "file": "sources/reports/item-wise-sales.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/journal-entry-register.sql",
+    "file": "sources/reports/journal-entry-register.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/payable-invoice-detail.sql",
+    "file": "sources/reports/payable-invoice-detail.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/payment-entry-register.sql",
+    "file": "sources/reports/payment-entry-register.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/payment-ledger.sql",
+    "file": "sources/reports/payment-ledger.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/pos-customer-summary.sql",
+    "file": "sources/reports/pos-customer-summary.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/pos-daily-summary.sql",
+    "file": "sources/reports/pos-daily-summary.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/pos-item-sales.sql",
+    "file": "sources/reports/pos-item-sales.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/pos-payment-summary.sql",
+    "file": "sources/reports/pos-payment-summary.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/pos-register.sql",
+    "file": "sources/reports/pos-register.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/pos-returns-register.sql",
+    "file": "sources/reports/pos-returns-register.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/pos-shift-summary.sql",
+    "file": "sources/reports/pos-shift-summary.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/pos-tax-summary.sql",
+    "file": "sources/reports/pos-tax-summary.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/profit-and-loss-statement.sql",
+    "file": "sources/reports/profit-and-loss-statement.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/purchase-analytics.sql",
+    "file": "sources/reports/purchase-analytics.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/purchase-invoice-trends.sql",
+    "file": "sources/reports/purchase-invoice-trends.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/purchase-register.sql",
+    "file": "sources/reports/purchase-register.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/purchase-tax-summary.sql",
+    "file": "sources/reports/purchase-tax-summary.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/receivable-invoice-detail.sql",
+    "file": "sources/reports/receivable-invoice-detail.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/sales-analytics.sql",
+    "file": "sources/reports/sales-analytics.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/sales-invoice-trends.sql",
+    "file": "sources/reports/sales-invoice-trends.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/sales-register.sql",
+    "file": "sources/reports/sales-register.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/sales-tax-summary.sql",
+    "file": "sources/reports/sales-tax-summary.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/stock-analytics.sql",
+    "file": "sources/reports/stock-analytics.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/stock-balance.sql",
+    "file": "sources/reports/stock-balance.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/stock-entry-register.sql",
+    "file": "sources/reports/stock-entry-register.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/stock-ledger.sql",
+    "file": "sources/reports/stock-ledger.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/stock-movement-summary.sql",
+    "file": "sources/reports/stock-movement-summary.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/stock-reconciliation-register.sql",
+    "file": "sources/reports/stock-reconciliation-register.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/stock-value-by-item-group.sql",
+    "file": "sources/reports/stock-value-by-item-group.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/supplier-ledger-summary.sql",
+    "file": "sources/reports/supplier-ledger-summary.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/supplier-wise-purchase.sql",
+    "file": "sources/reports/supplier-wise-purchase.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/trial-balance.sql",
+    "file": "sources/reports/trial-balance.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/reports/warehouse-stock-summary.sql",
+    "file": "sources/reports/warehouse-stock-summary.sql"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/company_after_insert.json",
+    "file": "sources/scripts/company_after_insert.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/journal_cancel.json",
+    "file": "sources/scripts/journal_cancel.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/journal_submit.json",
+    "file": "sources/scripts/journal_submit.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/journal_validate.json",
+    "file": "sources/scripts/journal_validate.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/payment_cancel.json",
+    "file": "sources/scripts/payment_cancel.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/payment_submit.json",
+    "file": "sources/scripts/payment_submit.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/payment_validate.json",
+    "file": "sources/scripts/payment_validate.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/pos_closing_cancel.json",
+    "file": "sources/scripts/pos_closing_cancel.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/pos_closing_submit.json",
+    "file": "sources/scripts/pos_closing_submit.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/pos_closing_validate.json",
+    "file": "sources/scripts/pos_closing_validate.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/pos_invoice_cancel.json",
+    "file": "sources/scripts/pos_invoice_cancel.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/pos_invoice_submit.json",
+    "file": "sources/scripts/pos_invoice_submit.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/pos_invoice_validate.json",
+    "file": "sources/scripts/pos_invoice_validate.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/pos_opening_cancel.json",
+    "file": "sources/scripts/pos_opening_cancel.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/pos_opening_validate.json",
+    "file": "sources/scripts/pos_opening_validate.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/pos_profile_validate.json",
+    "file": "sources/scripts/pos_profile_validate.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/purchase_invoice_cancel.json",
+    "file": "sources/scripts/purchase_invoice_cancel.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/purchase_invoice_submit.json",
+    "file": "sources/scripts/purchase_invoice_submit.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/purchase_invoice_validate.json",
+    "file": "sources/scripts/purchase_invoice_validate.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/sales_invoice_cancel.json",
+    "file": "sources/scripts/sales_invoice_cancel.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/sales_invoice_submit.json",
+    "file": "sources/scripts/sales_invoice_submit.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/sales_invoice_validate.json",
+    "file": "sources/scripts/sales_invoice_validate.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/stock_entry_cancel.json",
+    "file": "sources/scripts/stock_entry_cancel.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/stock_entry_submit.json",
+    "file": "sources/scripts/stock_entry_submit.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/stock_entry_validate.json",
+    "file": "sources/scripts/stock_entry_validate.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/stock_reconciliation_cancel.json",
+    "file": "sources/scripts/stock_reconciliation_cancel.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/stock_reconciliation_submit.json",
+    "file": "sources/scripts/stock_reconciliation_submit.json"
+  },
+  {
+    "storage_key": "apps/wmn_erp_lite/scripts/stock_reconciliation_validate.json",
+    "file": "sources/scripts/stock_reconciliation_validate.json"
+  }
+]

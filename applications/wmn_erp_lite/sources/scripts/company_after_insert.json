@@ -1,0 +1,804 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "1000",
+        "account_name": "Assets",
+        "is_group": 1,
+        "root_type": "Asset",
+        "account_type": "",
+        "disabled": 0
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "1100",
+        "account_name": "Current Assets",
+        "is_group": 1,
+        "root_type": "Asset",
+        "account_type": "",
+        "disabled": 0,
+        "parent_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-",
+            "1000"
+          ]
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "1110",
+        "account_name": "Cash",
+        "is_group": 0,
+        "root_type": "Asset",
+        "account_type": "Cash",
+        "disabled": 0,
+        "parent_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-",
+            "1100"
+          ]
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "1120",
+        "account_name": "Bank",
+        "is_group": 0,
+        "root_type": "Asset",
+        "account_type": "Bank",
+        "disabled": 0,
+        "parent_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-",
+            "1100"
+          ]
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "1130",
+        "account_name": "Accounts Receivable",
+        "is_group": 0,
+        "root_type": "Asset",
+        "account_type": "Receivable",
+        "disabled": 0,
+        "parent_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-",
+            "1100"
+          ]
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "1140",
+        "account_name": "Input Tax",
+        "is_group": 0,
+        "root_type": "Asset",
+        "account_type": "Tax",
+        "disabled": 0,
+        "parent_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-",
+            "1100"
+          ]
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "1200",
+        "account_name": "Stock Assets",
+        "is_group": 0,
+        "root_type": "Asset",
+        "account_type": "Stock",
+        "disabled": 0,
+        "parent_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-",
+            "1000"
+          ]
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "2000",
+        "account_name": "Liabilities",
+        "is_group": 1,
+        "root_type": "Liability",
+        "account_type": "",
+        "disabled": 0
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "2100",
+        "account_name": "Current Liabilities",
+        "is_group": 1,
+        "root_type": "Liability",
+        "account_type": "",
+        "disabled": 0,
+        "parent_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-",
+            "2000"
+          ]
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "2110",
+        "account_name": "Accounts Payable",
+        "is_group": 0,
+        "root_type": "Liability",
+        "account_type": "Payable",
+        "disabled": 0,
+        "parent_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-",
+            "2100"
+          ]
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "2120",
+        "account_name": "Output Tax",
+        "is_group": 0,
+        "root_type": "Liability",
+        "account_type": "Tax",
+        "disabled": 0,
+        "parent_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-",
+            "2100"
+          ]
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "3000",
+        "account_name": "Equity",
+        "is_group": 1,
+        "root_type": "Equity",
+        "account_type": "",
+        "disabled": 0
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "3100",
+        "account_name": "Retained Earnings",
+        "is_group": 0,
+        "root_type": "Equity",
+        "account_type": "Equity",
+        "disabled": 0,
+        "parent_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-",
+            "3000"
+          ]
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "4000",
+        "account_name": "Income",
+        "is_group": 1,
+        "root_type": "Income",
+        "account_type": "",
+        "disabled": 0
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "4100",
+        "account_name": "Sales",
+        "is_group": 0,
+        "root_type": "Income",
+        "account_type": "Income",
+        "disabled": 0,
+        "parent_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-",
+            "4000"
+          ]
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "4200",
+        "account_name": "Other Income",
+        "is_group": 0,
+        "root_type": "Income",
+        "account_type": "Income",
+        "disabled": 0,
+        "parent_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-",
+            "4000"
+          ]
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "5000",
+        "account_name": "Expenses",
+        "is_group": 1,
+        "root_type": "Expense",
+        "account_type": "",
+        "disabled": 0
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "5100",
+        "account_name": "Cost of Goods Sold",
+        "is_group": 0,
+        "root_type": "Expense",
+        "account_type": "COGS",
+        "disabled": 0,
+        "parent_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-",
+            "5000"
+          ]
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "5110",
+        "account_name": "Purchase Expense",
+        "is_group": 0,
+        "root_type": "Expense",
+        "account_type": "Expense",
+        "disabled": 0,
+        "parent_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-",
+            "5000"
+          ]
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "5200",
+        "account_name": "Stock Adjustment",
+        "is_group": 0,
+        "root_type": "Expense",
+        "account_type": "Expense",
+        "disabled": 0,
+        "parent_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-",
+            "5000"
+          ]
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Account",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "account_number": "5300",
+        "account_name": "General Expense",
+        "is_group": 0,
+        "root_type": "Expense",
+        "account_type": "Expense",
+        "disabled": 0,
+        "parent_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-",
+            "5000"
+          ]
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Cost Center",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "cost_center_name": "Main",
+        "is_group": 0,
+        "disabled": 0
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Warehouse",
+      "values": {
+        "company": {
+          "get": "doc.name"
+        },
+        "warehouse_name": "Stores",
+        "is_group": 0,
+        "disabled": 0
+      }
+    },
+    {
+      "op": "db_upsert",
+      "doctype": "UOM",
+      "name": "Nos",
+      "values": {
+        "name": "Nos",
+        "uom_name": "Nos",
+        "must_be_whole_number": 0
+      }
+    },
+    {
+      "op": "db_upsert",
+      "doctype": "Item Group",
+      "name": "All Item Groups",
+      "values": {
+        "name": "All Item Groups",
+        "item_group_name": "All Item Groups",
+        "is_group": 0
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Customer",
+      "values": {
+        "customer_name": {
+          "concat": [
+            "Walk In - ",
+            {
+              "get": "doc.name"
+            }
+          ]
+        },
+        "customer_group": "All Customers",
+        "disabled": 0
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Mode of Payment",
+      "values": {
+        "mode_of_payment": {
+          "concat": [
+            "Cash - ",
+            {
+              "get": "doc.name"
+            }
+          ]
+        },
+        "company": {
+          "get": "doc.name"
+        },
+        "type": "Cash",
+        "default_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-1110"
+          ]
+        },
+        "enabled": 1
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Mode of Payment",
+      "values": {
+        "mode_of_payment": {
+          "concat": [
+            "Bank - ",
+            {
+              "get": "doc.name"
+            }
+          ]
+        },
+        "company": {
+          "get": "doc.name"
+        },
+        "type": "Bank",
+        "default_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-1120"
+          ]
+        },
+        "enabled": 1
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Price List",
+      "values": {
+        "price_list_name": {
+          "concat": [
+            "Standard Selling - ",
+            {
+              "get": "doc.name"
+            }
+          ]
+        },
+        "currency": {
+          "get": "doc.default_currency"
+        },
+        "selling": 1,
+        "enabled": 1
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "POS Profile",
+      "values": {
+        "profile_name": {
+          "concat": [
+            "Default POS - ",
+            {
+              "get": "doc.name"
+            }
+          ]
+        },
+        "company": {
+          "get": "doc.name"
+        },
+        "warehouse": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-Stores"
+          ]
+        },
+        "default_customer": {
+          "concat": [
+            "Walk In - ",
+            {
+              "get": "doc.name"
+            }
+          ]
+        },
+        "default_mode_of_payment": {
+          "concat": [
+            "Cash - ",
+            {
+              "get": "doc.name"
+            }
+          ]
+        },
+        "allow_credit": 0,
+        "enabled": 1,
+        "payment_modes": [
+          {
+            "mode_of_payment": {
+              "concat": [
+                "Cash - ",
+                {
+                  "get": "doc.name"
+                }
+              ]
+            },
+            "is_default": 1,
+            "allow_in_returns": 1
+          },
+          {
+            "mode_of_payment": {
+              "concat": [
+                "Bank - ",
+                {
+                  "get": "doc.name"
+                }
+              ]
+            },
+            "is_default": 0,
+            "allow_in_returns": 1
+          }
+        ],
+        "hide_unavailable_items": 1,
+        "allow_edit_rate": 0,
+        "allow_edit_discount": 1,
+        "auto_add_filtered_item": 1,
+        "validate_stock": 1,
+        "set_grand_total_to_default_payment": 1,
+        "print_receipt_on_complete": 1,
+        "allow_partial_payment": 1,
+        "allow_returns": 1,
+        "action_on_new_invoice": "Always Ask",
+        "currency": {
+          "get": "doc.default_currency"
+        },
+        "selling_price_list": {
+          "concat": [
+            "Standard Selling - ",
+            {
+              "get": "doc.name"
+            }
+          ]
+        },
+        "customer_group": "All Customers",
+        "hide_images": 0,
+        "print_format_id": "wmn-erp-pos-receipt"
+      }
+    },
+    {
+      "op": "db_update",
+      "doctype": "Company",
+      "name": {
+        "get": "doc.name"
+      },
+      "values": {
+        "default_cash_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-1110"
+          ]
+        },
+        "default_bank_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-1120"
+          ]
+        },
+        "default_receivable_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-1130"
+          ]
+        },
+        "default_payable_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-2110"
+          ]
+        },
+        "default_sales_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-4100"
+          ]
+        },
+        "default_purchase_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-5110"
+          ]
+        },
+        "default_stock_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-1200"
+          ]
+        },
+        "default_cogs_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-5100"
+          ]
+        },
+        "default_stock_adjustment_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-5200"
+          ]
+        },
+        "default_tax_input_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-1140"
+          ]
+        },
+        "default_tax_output_account": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-2120"
+          ]
+        },
+        "default_cost_center": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-Main"
+          ]
+        },
+        "default_warehouse": {
+          "concat": [
+            {
+              "get": "doc.name"
+            },
+            "-Stores"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,174 @@
+{
+  "language": "wmn-procedure-v1",
+  "version": 1,
+  "steps": [
+    {
+      "op": "db_insert",
+      "doctype": "GL Entry",
+      "values": {
+        "company": {
+          "get": "doc.company"
+        },
+        "posting_date": {
+          "get": "doc.posting_date"
+        },
+        "account": {
+          "get": "doc.paid_to"
+        },
+        "party_type": {
+          "get": "doc.party_type"
+        },
+        "party": {
+          "get": "doc.party"
+        },
+        "voucher_type": "Payment Entry",
+        "voucher_no": {
+          "get": "doc.name"
+        },
+        "debit": {
+          "get": "doc.paid_amount"
+        },
+        "credit": 0,
+        "remarks": {
+          "get": "doc.remarks"
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "GL Entry",
+      "values": {
+        "company": {
+          "get": "doc.company"
+        },
+        "posting_date": {
+          "get": "doc.posting_date"
+        },
+        "account": {
+          "get": "doc.paid_from"
+        },
+        "party_type": {
+          "get": "doc.party_type"
+        },
+        "party": {
+          "get": "doc.party"
+        },
+        "voucher_type": "Payment Entry",
+        "voucher_no": {
+          "get": "doc.name"
+        },
+        "debit": 0,
+        "credit": {
+          "get": "doc.paid_amount"
+        },
+        "remarks": {
+          "get": "doc.remarks"
+        }
+      }
+    },
+    {
+      "op": "db_insert",
+      "doctype": "Payment Ledger Entry",
+      "values": {
+        "company": {
+          "get": "doc.company"
+        },
+        "posting_date": {
+          "get": "doc.posting_date"
+        },
+        "party_type": {
+          "get": "doc.party_type"
+        },
+        "party": {
+          "get": "doc.party"
+        },
+        "account": {
+          "if": {
+            "test": {
+              "eq": [
+                {
+                  "get": "doc.payment_type"
+                },
+                "Receive"
+              ]
+            },
+            "then": {
+              "get": "doc.paid_from"
+            },
+            "else": {
+              "get": "doc.paid_to"
+            }
+          }
+        },
+        "voucher_type": "Payment Entry",
+        "voucher_no": {
+          "get": "doc.name"
+        },
+        "amount": {
+          "mul": [
+            {
+              "get": "doc.paid_amount"
+            },
+            -1
+          ]
+        }
+      }
+    },
+    {
+      "op": "if",
+      "test": {
+        "not_empty": {
+          "get": "doc.reference_name"
+        }
+      },
+      "then": [
+        {
+          "op": "db_get",
+          "doctype": {
+            "get": "doc.reference_doctype"
+          },
+          "name": {
+            "get": "doc.reference_name"
+          },
+          "as": "reference_doc"
+        },
+        {
+          "op": "db_update",
+          "doctype": {
+            "get": "doc.reference_doctype"
+          },
+          "name": {
+            "get": "doc.reference_name"
+          },
+          "values": {
+            "outstanding_amount": {
+              "round": {
+                "value": {
+                  "sub": [
+                    {
+                      "coalesce": [
+                        {
+                          "field": {
+                            "from": {
+                              "get": "reference_doc"
+                            },
+                            "name": "outstanding_amount"
+                          }
+                        },
+                        0
+                      ]
+                    },
+                    {
+                      "get": "doc.paid_amount"
+                    }
+                  ]
+                },
+                "precision": 2
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

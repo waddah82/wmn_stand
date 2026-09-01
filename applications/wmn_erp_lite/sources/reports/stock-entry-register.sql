@@ -1,0 +1,1 @@
+SELECT name,posting_date,company,stock_entry_type,from_warehouse,to_warehouse,total_value,docstatus FROM "tabStock Entry" WHERE (%(company)s='' OR company=%(company)s) AND (%(from_date)s='' OR posting_date>=%(from_date)s) AND (%(to_date)s='' OR posting_date<=%(to_date)s) ORDER BY posting_date,name
