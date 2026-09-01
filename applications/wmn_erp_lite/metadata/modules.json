@@ -1,0 +1,62 @@
+[
+  {
+    "name": "WMN ERP Accounting",
+    "label": "Accounting",
+    "app_name": "wmn_erp_lite",
+    "icon": null,
+    "color": null,
+    "sequence_id": 10.0,
+    "enabled": 1,
+    "metadata_json": "{\"source_framework\":\"WMN\",\"application\":\"WMN ERP Lite\"}",
+    "created_at": "2026-08-31T19:42:00.000Z",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "name": "WMN ERP Stock",
+    "label": "Stock",
+    "app_name": "wmn_erp_lite",
+    "icon": null,
+    "color": null,
+    "sequence_id": 20.0,
+    "enabled": 1,
+    "metadata_json": "{\"source_framework\":\"WMN\",\"application\":\"WMN ERP Lite\"}",
+    "created_at": "2026-08-31T19:42:00.000Z",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "name": "WMN ERP Buying",
+    "label": "Buying",
+    "app_name": "wmn_erp_lite",
+    "icon": null,
+    "color": null,
+    "sequence_id": 30.0,
+    "enabled": 1,
+    "metadata_json": "{\"source_framework\":\"WMN\",\"application\":\"WMN ERP Lite\"}",
+    "created_at": "2026-08-31T19:42:00.000Z",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "name": "WMN ERP Selling",
+    "label": "Selling",
+    "app_name": "wmn_erp_lite",
+    "icon": null,
+    "color": null,
+    "sequence_id": 40.0,
+    "enabled": 1,
+    "metadata_json": "{\"source_framework\":\"WMN\",\"application\":\"WMN ERP Lite\"}",
+    "created_at": "2026-08-31T19:42:00.000Z",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "name": "WMN ERP POS",
+    "label": "Point of Sale",
+    "app_name": "wmn_erp_lite",
+    "icon": null,
+    "color": null,
+    "sequence_id": 50.0,
+    "enabled": 1,
+    "metadata_json": "{\"source_framework\":\"WMN\",\"application\":\"WMN ERP Lite\"}",
+    "created_at": "2026-08-31T19:42:00.000Z",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  }
+]

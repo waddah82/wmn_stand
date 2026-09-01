@@ -1,0 +1,54 @@
+[
+  {
+    "name": "wmn-erp-items",
+    "label": "Items",
+    "module": "WMN ERP Stock",
+    "app_name": "wmn_erp_lite",
+    "document_type": "Item",
+    "function": "Count",
+    "aggregate_field": null,
+    "report_name": null,
+    "filters_json": "[]",
+    "metadata_json": "{}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "name": "wmn-erp-customers",
+    "label": "Customers",
+    "module": "WMN ERP Selling",
+    "app_name": "wmn_erp_lite",
+    "document_type": "Customer",
+    "function": "Count",
+    "aggregate_field": null,
+    "report_name": null,
+    "filters_json": "[]",
+    "metadata_json": "{}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "name": "wmn-erp-suppliers",
+    "label": "Suppliers",
+    "module": "WMN ERP Buying",
+    "app_name": "wmn_erp_lite",
+    "document_type": "Supplier",
+    "function": "Count",
+    "aggregate_field": null,
+    "report_name": null,
+    "filters_json": "[]",
+    "metadata_json": "{}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "name": "wmn-erp-warehouses",
+    "label": "Warehouses",
+    "module": "WMN ERP Stock",
+    "app_name": "wmn_erp_lite",
+    "document_type": "Warehouse",
+    "function": "Count",
+    "aggregate_field": null,
+    "report_name": null,
+    "filters_json": "[]",
+    "metadata_json": "{}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  }
+]

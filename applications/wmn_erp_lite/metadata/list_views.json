@@ -1,0 +1,122 @@
+[
+  {
+    "doctype": "Company",
+    "settings_json": "{\"fields\":[\"company_name\",\"abbr\",\"default_currency\"],\"search_fields\":[\"company_name\",\"abbr\",\"country\"],\"default_filters\":[],\"sort_field\":\"company_name\",\"sort_descending\":false,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "Account",
+    "settings_json": "{\"fields\":[\"account_number\",\"account_name\",\"company\",\"root_type\",\"account_type\",\"is_group\"],\"search_fields\":[\"account_number\",\"account_name\",\"company\"],\"default_filters\":[],\"sort_field\":\"account_number\",\"sort_descending\":false,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "Cost Center",
+    "settings_json": "{\"fields\":[\"cost_center_name\",\"company\",\"is_group\",\"disabled\"],\"search_fields\":[\"cost_center_name\",\"company\"],\"default_filters\":[],\"sort_field\":\"cost_center_name\",\"sort_descending\":false,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "Mode of Payment",
+    "settings_json": "{\"fields\":[\"mode_of_payment\",\"company\",\"type\",\"default_account\",\"enabled\"],\"search_fields\":[\"mode_of_payment\",\"company\"],\"default_filters\":[],\"sort_field\":\"mode_of_payment\",\"sort_descending\":false,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "UOM",
+    "settings_json": "{\"fields\":[\"uom_name\",\"must_be_whole_number\"],\"search_fields\":[\"uom_name\"],\"default_filters\":[],\"sort_field\":\"uom_name\",\"sort_descending\":false,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "Item Group",
+    "settings_json": "{\"fields\":[\"item_group_name\",\"parent_item_group\",\"is_group\"],\"search_fields\":[\"item_group_name\"],\"default_filters\":[],\"sort_field\":\"item_group_name\",\"sort_descending\":false,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "Item",
+    "settings_json": "{\"fields\":[\"item_code\",\"item_name\",\"item_group\",\"stock_uom\",\"is_stock_item\",\"standard_rate\"],\"search_fields\":[\"item_code\",\"item_name\",\"item_group\"],\"default_filters\":[],\"sort_field\":\"item_code\",\"sort_descending\":false,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "Warehouse",
+    "settings_json": "{\"fields\":[\"warehouse_name\",\"company\",\"parent_warehouse\",\"is_group\",\"disabled\"],\"search_fields\":[\"warehouse_name\",\"company\"],\"default_filters\":[],\"sort_field\":\"warehouse_name\",\"sort_descending\":false,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "Customer",
+    "settings_json": "{\"fields\":[\"customer_name\",\"customer_group\",\"phone\",\"email\",\"disabled\"],\"search_fields\":[\"customer_name\",\"phone\",\"email\"],\"default_filters\":[],\"sort_field\":\"customer_name\",\"sort_descending\":false,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "Supplier",
+    "settings_json": "{\"fields\":[\"supplier_name\",\"supplier_group\",\"phone\",\"email\",\"disabled\"],\"search_fields\":[\"supplier_name\",\"phone\",\"email\"],\"default_filters\":[],\"sort_field\":\"supplier_name\",\"sort_descending\":false,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "GL Entry",
+    "settings_json": "{\"fields\":[\"posting_date\",\"account\",\"party_type\",\"party\",\"voucher_type\",\"voucher_no\",\"debit\",\"credit\"],\"search_fields\":[\"account\",\"party\",\"voucher_no\"],\"default_filters\":[],\"sort_field\":\"posting_date\",\"sort_descending\":true,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "Payment Ledger Entry",
+    "settings_json": "{\"fields\":[\"posting_date\",\"party_type\",\"party\",\"account\",\"voucher_type\",\"voucher_no\",\"amount\"],\"search_fields\":[\"party\",\"voucher_no\"],\"default_filters\":[],\"sort_field\":\"posting_date\",\"sort_descending\":true,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "Bin",
+    "settings_json": "{\"fields\":[\"item_code\",\"warehouse\",\"actual_qty\",\"valuation_rate\",\"stock_value\"],\"search_fields\":[\"item_code\",\"warehouse\"],\"default_filters\":[],\"sort_field\":\"item_code\",\"sort_descending\":false,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "Stock Ledger Entry",
+    "settings_json": "{\"fields\":[\"posting_date\",\"item_code\",\"warehouse\",\"voucher_type\",\"voucher_no\",\"actual_qty\",\"qty_after_transaction\",\"valuation_rate\"],\"search_fields\":[\"item_code\",\"warehouse\",\"voucher_no\"],\"default_filters\":[],\"sort_field\":\"posting_date\",\"sort_descending\":true,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "Journal Entry",
+    "settings_json": "{\"fields\":[\"posting_date\",\"company\",\"entry_type\",\"total_debit\",\"total_credit\",\"docstatus\"],\"search_fields\":[\"company\",\"user_remark\"],\"default_filters\":[],\"sort_field\":\"posting_date\",\"sort_descending\":true,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "Payment Entry",
+    "settings_json": "{\"fields\":[\"posting_date\",\"payment_type\",\"party_type\",\"party\",\"paid_amount\",\"reference_name\",\"reference_no\",\"docstatus\"],\"search_fields\":[\"party\",\"reference_name\",\"reference_no\"],\"default_filters\":[],\"sort_field\":\"posting_date\",\"sort_descending\":true,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "Stock Entry",
+    "settings_json": "{\"fields\":[\"posting_date\",\"stock_entry_type\",\"company\",\"from_warehouse\",\"to_warehouse\",\"total_value\",\"docstatus\"],\"search_fields\":[\"stock_entry_type\",\"company\"],\"default_filters\":[],\"sort_field\":\"posting_date\",\"sort_descending\":true,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "Stock Reconciliation",
+    "settings_json": "{\"fields\":[\"posting_date\",\"company\",\"value_difference\",\"docstatus\"],\"search_fields\":[\"company\"],\"default_filters\":[],\"sort_field\":\"posting_date\",\"sort_descending\":true,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "Purchase Invoice",
+    "settings_json": "{\"fields\":[\"posting_date\",\"supplier\",\"grand_total\",\"outstanding_amount\",\"docstatus\"],\"search_fields\":[\"supplier\",\"company\"],\"default_filters\":[],\"sort_field\":\"posting_date\",\"sort_descending\":true,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "Sales Invoice",
+    "settings_json": "{\"fields\":[\"posting_date\",\"customer\",\"grand_total\",\"outstanding_amount\",\"docstatus\"],\"search_fields\":[\"customer\",\"company\"],\"default_filters\":[],\"sort_field\":\"posting_date\",\"sort_descending\":true,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "POS Invoice",
+    "settings_json": "{\"fields\":[\"posting_date\",\"customer\",\"grand_total\",\"outstanding_amount\",\"docstatus\"],\"search_fields\":[\"customer\",\"company\"],\"default_filters\":[],\"sort_field\":\"posting_date\",\"sort_descending\":true,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "POS Profile",
+    "settings_json": "{\"fields\":[\"profile_name\",\"company\",\"warehouse\",\"default_customer\",\"allow_credit\",\"enabled\"],\"search_fields\":[\"profile_name\",\"company\"],\"default_filters\":[],\"sort_field\":\"profile_name\",\"sort_descending\":false,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-08-31T19:42:00.000Z"
+  },
+  {
+    "doctype": "Price List",
+    "settings_json": "{\"fields\":[\"price_list_name\",\"currency\",\"selling\",\"enabled\"],\"search_fields\":[\"price_list_name\"],\"default_filters\":[],\"sort_field\":\"price_list_name\",\"sort_descending\":false,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-09-01T17:30:00.000Z"
+  },
+  {
+    "doctype": "Item Price",
+    "settings_json": "{\"fields\":[\"price_list\",\"item_code\",\"uom\",\"price_list_rate\",\"enabled\"],\"search_fields\":[\"item_code\",\"price_list\"],\"default_filters\":[],\"sort_field\":\"item_code\",\"sort_descending\":false,\"page_size\":20,\"hide_name_column\":false,\"layout\":\"TABLE\"}",
+    "updated_at": "2026-09-01T17:30:00.000Z"
+  }
+]
